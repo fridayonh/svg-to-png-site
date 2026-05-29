@@ -9,7 +9,6 @@
     :root {
       color-scheme: light;
       --bg: #f0f2f7;
-      --card: #ffffff;
       --text: #1a1d2e;
       --text-secondary: #5a5f72;
       --muted: #8b8fa8;
@@ -20,22 +19,17 @@
       --primary-dark: #4338ca;
       --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
       --success: #10b981;
-      --success-light: #ecfdf5;
       --danger: #ef4444;
-      --danger-light: #fef2f2;
-      --warning: #f59e0b;
       --radius: 14px;
       --radius-sm: 10px;
       --radius-lg: 20px;
       --shadow-sm: 0 1px 3px rgba(16,24,40,0.04);
       --shadow: 0 1px 3px rgba(16,24,40,0.06), 0 4px 16px rgba(16,24,40,0.04);
-      --shadow-lg: 0 4px 8px rgba(16,24,40,0.06), 0 12px 32px rgba(16,24,40,0.08);
       --sidebar-w: 230px;
       --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    * { box-sizing: border-box; }
-
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -187,7 +181,7 @@
       display: flex;
       flex-direction: column;
     }
-    .grid-2 > .card { height: 100%; }
+
     .card:hover { box-shadow: var(--shadow); }
 
     .card-hd {
@@ -222,13 +216,7 @@
       align-items: stretch;
     }
 
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    /* ---- Form Elements ---- */
+/* ---- Form Elements ---- */
     textarea, input[type="text"], input[type="number"], select {
       width: 100%;
       border: 1.5px solid var(--line);
@@ -457,19 +445,11 @@
     .md-body blockquote { border-left: 3px solid var(--primary); padding: 8px 16px; margin: 12px 0; color: var(--text-secondary); background: var(--primary-light); border-radius: 0 8px 8px 0; }
 
     /* ---- Color Swatches ---- */
-    .color-swatch {
-      width: 100%;
-      height: 80px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--line);
-      transition: box-shadow var(--transition);
-    }
-
-    /* ---- Responsive ---- */
+/* ---- Responsive ---- */
     @media (max-width: 900px) {
       :root { --sidebar-w: 200px; }
       main { padding: 24px 20px 36px; }
-      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
     }
     @media (max-width: 700px) {
       body { flex-direction: column; }
@@ -1154,19 +1134,26 @@
   <section class="tool-panel" id="tool-b64img">
     <div class="tool-header">
       <h1>Base64 图片互转</h1>
-      <p>Base64 ↔ 图片双向转换：粘贴 Base64 预览图片，或上传图片生成 Base64 编码。</p>
+      <p>Base64 与图片双向转换：粘贴编码预览并下载，或上传图片生成 Base64。支持 PNG / JPEG / GIF / WebP / BMP / SVG 等格式。</p>
     </div>
 
     <!-- Base64 → Image -->
     <div class="card mb-12">
       <div class="card-hd">
         <h2>Base64 → 图片</h2>
-        <button id="b64iClear" class="btn-ghost">清空</button>
+        <div class="controls" style="gap:6px;">
+          <div class="field"><span class="label">格式</span><div class="value" id="b64iFormat">-</div></div>
+          <div class="field"><span class="label">尺寸</span><div class="value" id="b64iDim">-</div></div>
+          <div class="field"><span class="label">大小</span><div class="value" id="b64iSize">-</div></div>
+        </div>
+        <div class="controls">
+          <button id="b64iClear" class="btn-ghost">清空</button>
+        </div>
       </div>
       <div class="card-bd">
-        <div class="grid-2" style="gap:16px;">
-          <div>
-            <textarea id="b64iInput" style="min-height:160px;" placeholder="粘贴 Base64 图片字符串...&#10;例如: data:image/png;base64,iVBORw0KGgo..."></textarea>
+        <div class="grid-2" style="gap:16px;align-items:start;">
+          <div style="display:flex;flex-direction:column;min-height:260px;">
+            <textarea id="b64iInput" style="flex:1;min-height:180px;" placeholder="粘贴 Base64 图片字符串...&#10;例如: data:image/png;base64,iVBORw0KGgo..."></textarea>
             <div class="controls mt-12">
               <button id="b64iPreview" class="btn-primary">预览图片</button>
               <button id="b64iCopyData" class="btn-ghost">复制 Data URL</button>
@@ -1175,12 +1162,7 @@
             <p class="notice mt-12" id="b64iMsg"></p>
           </div>
           <div>
-            <div class="meta-row mb-12">
-              <div class="field"><span class="label">格式</span><div class="value" id="b64iFormat">-</div></div>
-              <div class="field"><span class="label">尺寸</span><div class="value" id="b64iDim">-</div></div>
-              <div class="field"><span class="label">大小</span><div class="value" id="b64iSize">-</div></div>
-            </div>
-            <div class="preview-box" id="b64iBox">
+            <div class="preview-box" id="b64iBox" style="min-height:260px;">
               <p class="notice">输入 Base64 后点击预览。</p>
             </div>
           </div>
@@ -1197,19 +1179,19 @@
         </div>
       </div>
       <div class="card-bd">
-        <div class="grid-2" style="gap:16px;">
-          <div>
+        <div class="grid-2" style="gap:16px;align-items:start;">
+          <div style="display:flex;flex-direction:column;min-height:260px;">
             <label class="btn-file mb-12" style="display:inline-flex;">
               选择图片<input id="img2b64File" type="file" accept="image/*" />
             </label>
             <p class="notice" id="img2b64Hint">支持 PNG / JPEG / GIF / WebP / BMP / SVG。</p>
-            <div class="preview-box mt-12" id="img2b64Box">
+            <div class="preview-box mt-12" id="img2b64Box" style="flex:1;min-height:140px;">
               <p class="notice">请选择一张图片。</p>
             </div>
           </div>
-          <div>
-            <label class="input-label">Data URL（含前缀，可直接用于 img src）</label>
-            <textarea id="img2b64DataUrl" readonly style="min-height:90px;font-size:11px;word-break:break-all;" placeholder="选择图片后自动生成..."></textarea>
+          <div style="display:flex;flex-direction:column;min-height:260px;">
+            <label class="input-label">Data URL（可直接用于 img src）</label>
+            <textarea id="img2b64DataUrl" readonly style="flex:1;min-height:160px;font-size:11px;word-break:break-all;" placeholder="选择图片后自动生成..."></textarea>
             <div class="controls mt-12">
               <button id="img2b64CopyData" class="btn-ghost">复制 Data URL</button>
               <button id="img2b64CopyRaw" class="btn-ghost">复制纯 Base64</button>
@@ -1266,7 +1248,11 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('tool-' + btn.dataset.tool).classList.add('active');
+    const panel = document.getElementById('tool-' + btn.dataset.tool);
+    if (panel) {
+      panel.classList.add('active');
+      document.querySelector('main').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 });
 
@@ -2067,6 +2053,11 @@ function hello() {
       else if (bytes[0] === 0x47 && bytes[1] === 0x49) mime = 'image/gif';
       else if (bytes[0] === 0x52 && bytes[1] === 0x49) mime = 'image/webp';
       else if (bytes[0] === 0x42 && bytes[1] === 0x4D) mime = 'image/bmp';
+      else {
+        // SVG: text-based XML, check decoded content
+        const head = new TextDecoder().decode(bytes.slice(0, 200)).trim().toLowerCase();
+        if (head.startsWith('<svg') || head.startsWith('<?xml')) mime = 'image/svg+xml';
+      }
       return { mime, b64: s, full: `data:${mime};base64,${s}` };
     } catch { return null; }
   }
@@ -2184,26 +2175,27 @@ function hello() {
       let line = lines[i].trim();
       if (!line) continue;
 
-      // Detect first request/status line — only if it actually looks like one
-      // IMPORTANT: use \b to avoid CONNECT matching "Connection", TRACE matching "Traceparent", etc.
-      if (firstLine === null && line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\b/i)) {
-        firstLine = line;
-        const reqMatch = line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\s+(\S+)(?:\s+HTTP\/(\S+))?/i);
-        if (reqMatch) {
-          result._meta.method = reqMatch[1].toUpperCase();
-          result._meta.url = reqMatch[2];
-          result._meta.protocol = reqMatch[3] ? 'HTTP/' + reqMatch[3] : '';
-        } else {
-          const respMatch = line.match(/^HTTP\/(\S+)\s+(\d{3})(?:\s+(.+))?/);
-          if (respMatch) {
-            result._meta.protocol = 'HTTP/' + respMatch[1];
-            result._meta.status = parseInt(respMatch[2]);
-            result._meta.statusText = (respMatch[3] || '').trim();
+      // First line: request line or status line
+      if (i === 0 || (firstLine === null && line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|HTTP\/)/i))) {
+        if (firstLine === null) {
+          firstLine = line;
+          const reqMatch = line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\s+(\S+)(?:\s+HTTP\/(\S+))?/i);
+          if (reqMatch) {
+            result._meta.method = reqMatch[1].toUpperCase();
+            result._meta.url = reqMatch[2];
+            result._meta.protocol = reqMatch[3] ? 'HTTP/' + reqMatch[3] : '';
           } else {
-            result._meta.raw = line;
+            const respMatch = line.match(/^HTTP\/(\S+)\s+(\d{3})(?:\s+(.+))?/);
+            if (respMatch) {
+              result._meta.protocol = 'HTTP/' + respMatch[1];
+              result._meta.status = parseInt(respMatch[2]);
+              result._meta.statusText = (respMatch[3] || '').trim();
+            } else {
+              result._meta.raw = line;
+            }
           }
+          continue;
         }
-        continue;
       }
 
       // Header line: Key: Value
@@ -2233,6 +2225,8 @@ function hello() {
     if (!text) return setMsg('请粘贴 HTTP Headers。', 'error');
     try {
       const parsed = parseHeaders(text);
+      // 仅输出 headers，不输出请求行/状态行的 _meta
+      delete parsed._meta;
       output.value = JSON.stringify(parsed, null, 2);
       setMsg('转换成功！', 'success');
     } catch (e) { setMsg('解析失败: ' + e.message, 'error'); }
@@ -2243,6 +2237,7 @@ function hello() {
     if (!text) return setMsg('请粘贴 HTTP Headers。', 'error');
     try {
       const parsed = parseHeaders(text);
+      delete parsed._meta;
       const js = 'const headers = ' + JSON.stringify(parsed, null, 2)
         .replace(/"([^"]+)":/g, (_, k) => /^[a-zA-Z_$][\w$]*$/.test(k) ? `${k}:` : `"${k}":`);
       output.value = js + ';';
@@ -2366,17 +2361,6 @@ async function copyWithFeedback(text, btnEl, label) {
   } catch (e) {
     showToast('复制失败: ' + e.message, 'error');
   }
-}
-
-// Legacy wrapper — still works with element ID + setMsgFn style
-function copyToClipboard(elementId, setMsgFn) {
-  const el = document.getElementById(elementId);
-  const text = (el?.value || el?.textContent || '').trim();
-  if (!text) { setMsgFn('没有可复制的内容。', 'error'); return; }
-  copyText(text).then(
-    () => setMsgFn('已复制到剪贴板。', 'success'),
-    (e) => setMsgFn('复制失败: ' + e.message, 'error')
-  );
 }
 
 // ========== 网站图标获取 =======================
