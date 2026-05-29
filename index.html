@@ -2184,27 +2184,26 @@ function hello() {
       let line = lines[i].trim();
       if (!line) continue;
 
-      // First line: request line or status line
-      if (i === 0 || (firstLine === null && line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|HTTP\/)/i))) {
-        if (firstLine === null) {
-          firstLine = line;
-          const reqMatch = line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\s+(\S+)(?:\s+HTTP\/(\S+))?/i);
-          if (reqMatch) {
-            result._meta.method = reqMatch[1].toUpperCase();
-            result._meta.url = reqMatch[2];
-            result._meta.protocol = reqMatch[3] ? 'HTTP/' + reqMatch[3] : '';
+      // Detect first request/status line — only if it actually looks like one
+      // IMPORTANT: use \b to avoid CONNECT matching "Connection", TRACE matching "Traceparent", etc.
+      if (firstLine === null && line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\b/i)) {
+        firstLine = line;
+        const reqMatch = line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\s+(\S+)(?:\s+HTTP\/(\S+))?/i);
+        if (reqMatch) {
+          result._meta.method = reqMatch[1].toUpperCase();
+          result._meta.url = reqMatch[2];
+          result._meta.protocol = reqMatch[3] ? 'HTTP/' + reqMatch[3] : '';
+        } else {
+          const respMatch = line.match(/^HTTP\/(\S+)\s+(\d{3})(?:\s+(.+))?/);
+          if (respMatch) {
+            result._meta.protocol = 'HTTP/' + respMatch[1];
+            result._meta.status = parseInt(respMatch[2]);
+            result._meta.statusText = (respMatch[3] || '').trim();
           } else {
-            const respMatch = line.match(/^HTTP\/(\S+)\s+(\d{3})(?:\s+(.+))?/);
-            if (respMatch) {
-              result._meta.protocol = 'HTTP/' + respMatch[1];
-              result._meta.status = parseInt(respMatch[2]);
-              result._meta.statusText = (respMatch[3] || '').trim();
-            } else {
-              result._meta.raw = line;
-            }
+            result._meta.raw = line;
           }
-          continue;
         }
+        continue;
       }
 
       // Header line: Key: Value
@@ -2212,13 +2211,7 @@ function hello() {
       if (colonIdx > 0) {
         const key = line.substring(0, colonIdx).trim();
         let val = line.substring(colonIdx + 1).trim();
-        // Try to parse JSON values
-        if (val.startsWith('{') || val.startsWith('[')) {
-          try { val = JSON.parse(val); } catch {}
-        } else if (val === 'true') val = true;
-        else if (val === 'false') val = false;
-        else if (/^\d+$/.test(val)) val = parseInt(val);
-        else if (/^\d+\.\d+$/.test(val)) val = parseFloat(val);
+        // HTTP header values are ALWAYS strings — never auto-coerce to number/boolean
 
         // Merge duplicate headers into array
         if (Object.prototype.hasOwnProperty.call(result, key)) {
@@ -2438,11 +2431,18 @@ function copyToClipboard(elementId, setMsgFn) {
     setMsg(text, 'error');
   }
 
+  // ========== Fetch with timeout helper ==========
+  function fetchWithTimeout(url, timeoutMs = 8000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+  }
+
   // ========== Fetch via public favicon API ==========
   async function fetchFaviconApi(domain) {
     const url = `https://api.afmax.cn/so/ico/index.php?r=${domain}`;
     try {
-      const resp = await fetch(url);
+      const resp = await fetchWithTimeout(url, 10000);
       if (!resp.ok) return null;
       const blob = await resp.blob();
       const dataUrl = URL.createObjectURL(blob);
@@ -2455,7 +2455,7 @@ function copyToClipboard(elementId, setMsgFn) {
   async function fetchSvgFromProxy(baseUrl) {
     const svgUrl = `${baseUrl}/favicon.svg`;
     try {
-      const resp = await fetch(`/proxy/favicon?url=${encodeURIComponent(svgUrl)}`);
+      const resp = await fetchWithTimeout(`/proxy/favicon?url=${encodeURIComponent(svgUrl)}`, 8000);
       if (!resp.ok) return null;
       const contentType = resp.headers.get('content-type') || '';
       if (!contentType.includes('svg')) return null;
