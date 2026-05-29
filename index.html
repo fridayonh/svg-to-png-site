@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG 转 PNG</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #172033;
+        --muted: #667085;
+        --line: #d9dde7;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --success: #16a34a;
+        --shadow: 0 12px 30px rgba(16, 24, 40, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 220px);
+        color: var(--text);
+      }
+
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 40px;
+      }
+
+      header {
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(30px, 4vw, 44px);
+        line-height: 1.1;
+      }
+
+      .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(217, 221, 231, 0.9);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-hd {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .card-hd h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .card-bd {
+        padding: 18px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      textarea {
+        width: 100%;
+        flex: 1;
+        min-height: 200px;
+        resize: vertical;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px;
+        font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: rgba(37, 99, 235, 0.7);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button,
+      .file-btn {
+        appearance: none;
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.15s ease;
+      }
+
+      button.primary,
+      .file-btn {
+        background: var(--primary);
+        color: white;
+      }
+
+      button.primary:hover,
+      .file-btn:hover {
+        background: var(--primary-dark);
+      }
+
+      button.secondary {
+        background: #eef2ff;
+        color: #1e3a8a;
+      }
+
+      button.secondary:hover {
+        background: #dbe4ff;
+      }
+
+      button.ghost {
+        background: #f3f4f6;
+        color: #344054;
+      }
+
+      button.ghost:hover {
+        background: #e5e7eb;
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .field {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px 12px;
+      }
+
+      .label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .value {
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .preview-box {
+        flex: 1;
+        min-height: 200px;
+        border: 1px dashed #cfd5e3;
+        border-radius: 14px;
+        background: repeating-conic-gradient(#f8fafc 0% 25%, #eef2f7 0% 50%) 50% / 22px 22px;
+        display: grid;
+        place-items: center;
+        overflow: auto;
+        padding: 12px;
+      }
+
+      .preview-box img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .png-preview {
+        max-width: 100%;
+        display: none;
+      }
+
+      .notice {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .notice.error {
+        color: #b42318;
+      }
+
+      .notice.success {
+        color: var(--success);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        background: #f3f4f6;
+        border-radius: 10px;
+        padding: 4px;
+        margin-bottom: 12px;
+      }
+
+      .tab {
+        appearance: none;
+        border: 0;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        transition: 0.15s ease;
+      }
+
+      .tab.active {
+        background: var(--card);
+        color: var(--text);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      }
+
+      .tab:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .input-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .input-area textarea {
+        flex: 1;
+      }
+
+      .input-hint {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+
+      .action-bar .controls {
+        margin: 0;
+      }
+
+      @media (max-width: 960px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        textarea,
+        .preview-box {
+          min-height: 240px;
+        }
+
+        .meta {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>SVG 转 PNG</h1>
+        <p class="sub">粘贴 SVG 或上传文件，预览后直接导出 PNG。支持透明背景。</p>
+      </header>
+
+      <div class="grid">
+        <section class="card">
+          <div class="card-hd">
+            <h2>输入 SVG</h2>
+            <div class="controls">
+              <label class="file-btn" for="fileInput">上传 SVG</label>
+              <input id="fileInput" class="file-input" type="file" accept=".svg,image/svg+xml" />
+              <button id="loadSample" class="ghost" type="button">示例</button>
+              <button id="clearBtn" class="ghost" type="button">清空</button>
+            </div>
+          </div>
+          <div class="card-bd">
+            <div class="input-area">
+              <textarea id="svgInput" spellcheck="false" placeholder="把 SVG 代码粘贴到这里..."></textarea>
+            </div>
+            <div class="input-hint" id="inputHint">支持直接粘贴完整 SVG 文本。</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <h2>预览与导出</h2>
+            <button id="convertBtn" class="primary" type="button">生成 PNG</button>
+          </div>
+          <div class="card-bd">
+            <div class="meta">
+              <div class="field">
+                <span class="label">尺寸</span>
+                <div class="value" id="sizeInfo">-</div>
+              </div>
+              <div class="field">
+                <span class="label">文件名</span>
+                <div class="value" id="nameInfo">svg.png</div>
+              </div>
+              <div class="field">
+                <span class="label">状态</span>
+                <div class="value" id="statusInfo">等待输入</div>
+              </div>
+            </div>
+
+            <div class="tabs">
+              <button class="tab active" id="tabSvg" type="button">SVG 预览</button>
+              <button class="tab" id="tabPng" type="button" disabled>PNG 预览</button>
+            </div>
+
+            <div class="preview-box" id="previewBox">
+              <img id="svgPreview" alt="SVG 预览" />
+              <img id="pngPreview" class="png-preview" alt="PNG 预览" />
+            </div>
+
+            <div class="action-bar">
+              <p class="notice" id="message">输入 SVG 后点击“生成 PNG”。</p>
+              <div class="controls">
+                <button id="downloadBtn" class="secondary" type="button" disabled>下载 PNG</button>
+                <button id="copySvgBtn" class="ghost" type="button">复制 SVG</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const svgInput = document.getElementById('svgInput');
+      const fileInput = document.getElementById('fileInput');
+      const convertBtn = document.getElementById('convertBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const copySvgBtn = document.getElementById('copySvgBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const loadSampleBtn = document.getElementById('loadSample');
+      const svgPreview = document.getElementById('svgPreview');
+      const pngPreview = document.getElementById('pngPreview');
+      const message = document.getElementById('message');
+      const inputHint = document.getElementById('inputHint');
+      const sizeInfo = document.getElementById('sizeInfo');
+      const nameInfo = document.getElementById('nameInfo');
+      const statusInfo = document.getElementById('statusInfo');
+      const tabSvg = document.getElementById('tabSvg');
+      const tabPng = document.getElementById('tabPng');
+
+      let lastPngUrl = '';
+      let lastFileName = 'svg.png';
+
+      const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="300" viewBox="0 0 520 300">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1e293b" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="520" height="300" rx="28" fill="#f8fafc"/>
+  <circle cx="82" cy="74" r="42" fill="#bfdbfe"/>
+  <circle cx="438" cy="66" r="56" fill="#ddd6fe"/>
+  <rect x="70" y="70" width="380" height="160" rx="24" fill="url(#g)" filter="url(#shadow)"/>
+  <text x="260" y="155" text-anchor="middle" fill="#fff" font-size="44" font-weight="800" font-family="Arial, sans-serif">SVG → PNG</text>
+  <text x="260" y="193" text-anchor="middle" fill="#e0e7ff" font-size="18" font-family="Arial, sans-serif">Paste, preview, convert, download</text>
+</svg>`;
+
+      function setMessage(text, type = '') {
+        message.textContent = text;
+        message.className = `notice${type ? ' ' + type : ''}`;
+      }
+
+      function escapeFilename(name) {
+        return name.replace(/[^a-z0-9._-]+/gi, '_').replace(/^_+|_+$/g, '') || 'svg';
+      }
+
+      function inferSize(svgText) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svg = doc.querySelector('svg');
+        if (!svg) throw new Error('未找到 SVG 根节点');
+
+        let width = parseFloat(svg.getAttribute('width') || '0');
+        let height = parseFloat(svg.getAttribute('height') || '0');
+        const viewBox = svg.getAttribute('viewBox');
+
+        if ((!width || !height) && viewBox) {
+          const parts = viewBox.split(/\s+/).map(Number);
+          if (parts.length === 4) {
+            width = width || parts[2];
+            height = height || parts[3];
+          }
+        }
+
+        if (!width || !height) {
+          width = 512;
+          height = 512;
+        }
+
+        return {
+          width: Math.max(1, Math.round(width)),
+          height: Math.max(1, Math.round(height)),
+        };
+      }
+
+      function updateSvgPreview(svgText) {
+        const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        svgPreview.src = url;
+        svgPreview.style.display = 'block';
+        pngPreview.style.display = 'none';
+        tabSvg.classList.add('active');
+        tabPng.classList.remove('active');
+        if (lastPngUrl) {
+          URL.revokeObjectURL(lastPngUrl);
+          lastPngUrl = '';
+        }
+        svgPreview.onload = () => URL.revokeObjectURL(url);
+      }
+
+      function showTab(type) {
+        if (type === 'svg') {
+          svgPreview.style.display = 'block';
+          pngPreview.style.display = 'none';
+          tabSvg.classList.add('active');
+          tabPng.classList.remove('active');
+        } else {
+          svgPreview.style.display = 'none';
+          pngPreview.style.display = 'block';
+          tabPng.classList.add('active');
+          tabSvg.classList.remove('active');
+        }
+      }
+
+      async function convertSvgToPng(svgText) {
+        const { width, height } = inferSize(svgText);
+        const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        try {
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error('SVG 解析失败，请检查内容是否完整。'));
+            img.src = svgUrl;
+          });
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+          if (!blob) throw new Error('PNG 生成失败。');
+
+          if (lastPngUrl) URL.revokeObjectURL(lastPngUrl);
+          lastPngUrl = URL.createObjectURL(blob);
+          pngPreview.src = lastPngUrl;
+          showTab('png');
+          downloadBtn.disabled = false;
+          downloadBtn.dataset.url = lastPngUrl;
+          sizeInfo.textContent = `${width} × ${height}`;
+          statusInfo.textContent = '已生成';
+          setMessage('PNG 已生成，可以直接下载。', 'success');
+          return blob;
+        } finally {
+          URL.revokeObjectURL(svgUrl);
+        }
+      }
+
+      async function syncInput() {
+        const svgText = svgInput.value.trim();
+        if (!svgText) {
+          svgPreview.removeAttribute('src');
+          pngPreview.removeAttribute('src');
+          pngPreview.style.display = 'none';
+          svgPreview.style.display = 'block';
+          downloadBtn.disabled = true;
+          tabPng.disabled = true;
+          statusInfo.textContent = '等待输入';
+          sizeInfo.textContent = '-';
+          nameInfo.textContent = 'svg.png';
+          setMessage('输入 SVG 后点击“生成 PNG”。');
+          return;
+        }
+
+        try {
+          const { width, height } = inferSize(svgText);
+          sizeInfo.textContent = `${width} × ${height}`;
+          const name = (svgInput.dataset.filename || 'svg').replace(/\.svg$/i, '');
+          nameInfo.textContent = `${escapeFilename(name)}.png`;
+          statusInfo.textContent = '可预览';
+          updateSvgPreview(svgText);
+          setMessage('SVG 已加载，点击“生成 PNG”即可。');
+        } catch (err) {
+          setMessage(err.message, 'error');
+          statusInfo.textContent = '错误';
+        }
+      }
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        const text = await file.text();
+        svgInput.value = text;
+        svgInput.dataset.filename = file.name;
+        inputHint.textContent = `已载入文件：${file.name}`;
+        await syncInput();
+      });
+
+      svgInput.addEventListener('input', syncInput);
+
+      convertBtn.addEventListener('click', async () => {
+        const svgText = svgInput.value.trim();
+        if (!svgText) {
+          setMessage('请先输入 SVG。', 'error');
+          return;
+        }
+
+        convertBtn.disabled = true;
+        downloadBtn.disabled = true;
+        statusInfo.textContent = '转换中';
+        setMessage('正在生成 PNG...');
+
+        try {
+          await convertSvgToPng(svgText);
+          tabPng.disabled = false;
+        } catch (err) {
+          statusInfo.textContent = '失败';
+          setMessage(err.message || '转换失败。', 'error');
+        } finally {
+          convertBtn.disabled = false;
+        }
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        const url = downloadBtn.dataset.url;
+        if (!url) return;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nameInfo.textContent || 'svg.png';
+        a.click();
+      });
+
+      copySvgBtn.addEventListener('click', async () => {
+        const text = svgInput.value.trim();
+        if (!text) {
+          setMessage('没有可复制的 SVG。', 'error');
+          return;
+        }
+        await navigator.clipboard.writeText(text);
+        setMessage('SVG 已复制到剪贴板。', 'success');
+      });
+
+      clearBtn.addEventListener('click', () => {
+        svgInput.value = '';
+        svgInput.dataset.filename = '';
+        fileInput.value = '';
+        inputHint.textContent = '支持直接粘贴完整 SVG 文本。';
+        syncInput();
+      });
+
+      loadSampleBtn.addEventListener('click', () => {
+        svgInput.dataset.filename = 'sample.svg';
+        svgInput.value = sampleSvg;
+        inputHint.textContent = '已加载示例 SVG。';
+        syncInput();
+      });
+
+      tabSvg.addEventListener('click', () => showTab('svg'));
+      tabPng.addEventListener('click', () => {
+        if (!lastPngUrl) return;
+        showTab('png');
+      });
+
+      syncInput();
+    </script>
+  </body>
+</html>
