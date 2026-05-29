@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "PORT=6006 node server.mjs"
+    "start": "PORT=6006 node server.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
   }
 }

@@ -1,400 +1,1296 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SVG 转 PNG</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f6f7fb;
-        --card: #ffffff;
-        --text: #172033;
-        --muted: #667085;
-        --line: #d9dde7;
-        --primary: #2563eb;
-        --primary-dark: #1d4ed8;
-        --success: #16a34a;
-        --shadow: 0 12px 30px rgba(16, 24, 40, 0.08);
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>friday工具箱</title>
+  <link rel="icon" type="image/png" href="https://od.lk/s/OTZfMTA4MDQ5MzkwXw/gzhlogo.png" />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f0f2f7;
+      --card: #ffffff;
+      --text: #1a1d2e;
+      --text-secondary: #5a5f72;
+      --muted: #8b8fa8;
+      --line: #e4e6ef;
+      --line-light: #f0f1f6;
+      --primary: #4f46e5;
+      --primary-light: #eef2ff;
+      --primary-dark: #4338ca;
+      --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      --success: #10b981;
+      --success-light: #ecfdf5;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --warning: #f59e0b;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(16,24,40,0.04);
+      --shadow: 0 1px 3px rgba(16,24,40,0.06), 0 4px 16px rgba(16,24,40,0.04);
+      --shadow-lg: 0 4px 8px rgba(16,24,40,0.06), 0 12px 32px rgba(16,24,40,0.08);
+      --sidebar-w: 230px;
+      --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-      * {
-        box-sizing: border-box;
-      }
+    * { box-sizing: border-box; }
 
-      body {
-        margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 220px);
-        color: var(--text);
-      }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-      .wrap {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 32px 20px 40px;
-      }
+    /* ---- Custom Scrollbar ---- */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-      header {
-        margin-bottom: 20px;
-      }
+    /* ---- Sidebar ---- */
+    aside {
+      width: var(--sidebar-w);
+      background: #fff;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 10;
+      overflow-y: auto;
+      box-shadow: 1px 0 0 rgba(0,0,0,0.02);
+    }
 
-      h1 {
-        margin: 0 0 8px;
-        font-size: clamp(30px, 4vw, 44px);
-        line-height: 1.1;
-      }
+    .logo {
+      padding: 22px 18px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #1a1d2e;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fafbfd;
+    }
+    .logo img { flex-shrink: 0; border-radius: 6px; }
+    .logo span { background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-      .sub {
-        margin: 0;
-        color: var(--muted);
-        font-size: 15px;
-      }
+    nav { flex: 1; padding: 12px 10px; }
 
-      .grid {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 18px;
-      }
+    .nav-group {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #a1a8c0;
+      padding: 20px 14px 8px;
+    }
+    .nav-group:first-child { padding-top: 4px; }
 
-      .card {
-        background: var(--card);
-        border: 1px solid rgba(217, 221, 231, 0.9);
-        border-radius: 18px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-secondary);
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+      position: relative;
+    }
 
-      .card-hd {
-        padding: 16px 18px;
-        border-bottom: 1px solid var(--line);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
+    .nav-item:hover {
+      background: #f4f5fa;
+      color: var(--text);
+    }
+    .nav-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: var(--primary);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-item svg { flex-shrink: 0; opacity: 0.55; transition: var(--transition); }
+    .nav-item.active svg { opacity: 1; }
 
-      .card-hd h2 {
-        margin: 0;
-        font-size: 16px;
-      }
+    /* ---- Sidebar Footer ---- */
+    .sidebar-footer {
+      padding: 16px 18px;
+      border-top: 1px solid var(--line);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      background: #fafbfd;
+    }
 
-      .card-bd {
-        padding: 18px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-      }
+    /* ---- Main ---- */
+    main {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      padding: 32px 36px 48px;
+      min-width: 0;
+      max-width: 1400px;
+    }
 
-      textarea {
+    .tool-panel { display: none; }
+    .tool-panel.active { display: block; animation: fadeSlideIn 0.3s ease; }
+
+    .tool-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tool-header h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .tool-header p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ---- Cards ---- */
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: box-shadow var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+    .grid-2 > .card { height: 100%; }
+    .card:hover { box-shadow: var(--shadow); }
+
+    .card-hd {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--line-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #fafbfd;
+      flex-shrink: 0;
+    }
+    .card-hd h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.1px;
+    }
+    .card-bd {
+      padding: 20px;
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    /* ---- Form Elements ---- */
+    textarea, input[type="text"], input[type="number"], select {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      outline: none;
+      resize: vertical;
+      background: #fafbfd;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    textarea:hover, input:hover, select:hover { border-color: #cdd0db; }
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+      background: #fff;
+    }
+
+    textarea { min-height: 180px; flex: 1; }
+    textarea.tall { min-height: 260px; }
+
+    .input-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e7eb;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+    /* ---- Buttons ---- */
+    button, .btn-file {
+      appearance: none;
+      border: 0;
+      border-radius: var(--radius-sm);
+      padding: 9px 16px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      letter-spacing: 0.1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    button:active:not(:disabled) { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(79,70,229,0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 2px 8px rgba(79,70,229,0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .btn-secondary:hover:not(:disabled) { background: #e0e5ff; }
+
+    .btn-ghost {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .btn-ghost:hover:not(:disabled) { background: #e5e7eb; }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(16,185,129,0.3);
+    }
+    .btn-success:hover:not(:disabled) {
+      background: #059669;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.35);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-danger:hover:not(:disabled) { background: #dc2626; }
+
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+
+    .btn-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(79,70,229,0.3);
+      cursor: pointer;
+    }
+    .btn-file:hover { background: var(--primary-dark); box-shadow: 0 2px 8px rgba(79,70,229,0.35); }
+    .btn-file input[type="file"] { display: none; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* ---- Notices ---- */
+    .notice {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .notice.error { color: var(--danger); }
+    .notice.success { color: var(--success); }
+
+    /* ---- Preview Box ---- */
+    .preview-box {
+      min-height: 180px;
+      max-height: 360px;
+      border: 2px dashed #e4e7f0;
+      border-radius: var(--radius);
+      background: #fafbfd;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      padding: 16px;
+      transition: border-color var(--transition), max-height 0.3s ease;
+      flex: 1;
+    }
+    .preview-box:has(img[src]) { border-style: solid; border-color: var(--line-light); background: #fff; }
+    .preview-box img { max-width: 100%; max-height: 100%; height: auto; width: auto; display: block; border-radius: 6px; object-fit: contain; }
+
+    /* ---- Meta Fields ---- */
+    .meta-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .field {
+      border: 1px solid var(--line-light);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      background: #fafbfd;
+      transition: box-shadow var(--transition);
+    }
+    .field:hover { box-shadow: var(--shadow-sm); }
+    .field .label { font-size: 10.5px; color: var(--muted); margin-bottom: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .field .value { font-weight: 700; font-size: 13px; word-break: break-all; color: var(--text); }
+
+    /* ---- Utility ---- */
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mb-12 { margin-bottom: 12px; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+    /* ---- Tab Switcher ---- */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 12px;
+    }
+    .tab-bar button {
+      flex: 1;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: transparent;
+      color: var(--muted);
+      transition: var(--transition);
+    }
+    .tab-bar button.active { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+    /* ---- Markdown Preview ---- */
+    .md-body {
+      font-size: 14px;
+      line-height: 1.75;
+      color: #374151;
+    }
+    .md-body h1, .md-body h2, .md-body h3 { margin-top: 1.2em; margin-bottom: 0.5em; font-weight: 700; }
+    .md-body h1 { font-size: 1.6em; }
+    .md-body h2 { font-size: 1.3em; }
+    .md-body h3 { font-size: 1.1em; }
+    .md-body pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    .md-body code { background: #f1f5f9; color: #e11d48; padding: 2px 6px; border-radius: 5px; font-size: 12.5px; }
+    .md-body pre code { background: none; color: inherit; padding: 0; }
+    .md-body table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    .md-body th { background: #f8fafc; font-weight: 700; }
+    .md-body th, .md-body td { border: 1px solid var(--line); padding: 10px 14px; text-align: left; }
+    .md-body tr:hover td { background: #fafbfd; }
+    .md-body blockquote { border-left: 3px solid var(--primary); padding: 8px 16px; margin: 12px 0; color: var(--text-secondary); background: var(--primary-light); border-radius: 0 8px 8px 0; }
+
+    /* ---- Color Swatches ---- */
+    .color-swatch {
+      width: 100%;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      transition: box-shadow var(--transition);
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 200px; }
+      main { padding: 24px 20px 36px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      body { flex-direction: column; }
+      aside {
+        position: static;
         width: 100%;
-        flex: 1;
-        min-height: 200px;
-        resize: vertical;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 14px;
-        font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        outline: none;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 6px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        box-shadow: none;
       }
+      .logo { display: none; }
+      .sidebar-footer { display: none; }
+      nav { display: flex; padding: 0; gap: 2px; }
+      .nav-group { display: none; }
+      .nav-item { flex-shrink: 0; font-size: 12px; padding: 8px 10px; white-space: nowrap; }
+      .nav-item.active::before { display: none; }
+      main { margin-left: 0; padding: 18px 12px 32px; }
+      .card-hd { flex-wrap: wrap; }
+      .tool-header h1 { font-size: 22px; }
+    }
 
-      textarea:focus {
-        border-color: rgba(37, 99, 235, 0.7);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-      }
+    /* ---- Toast Notification ---- */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
 
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
+    .toast {
+      pointer-events: auto;
+      background: #1e293b;
+      color: #fff;
+      padding: 11px 22px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 1.8s forwards;
+      white-space: nowrap;
+    }
+    .toast.success { border-left: 3px solid #22c55e; }
+    .toast.error   { border-left: 3px solid #ef4444; }
 
-      button,
-      .file-btn {
-        appearance: none;
-        border: 0;
-        border-radius: 12px;
-        padding: 11px 14px;
-        font: inherit;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.15s ease;
-      }
+    @keyframes toastIn  { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateY(0); }   to { opacity: 0; transform: translateY(-12px); } }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-      button.primary,
-      .file-btn {
-        background: var(--primary);
-        color: white;
-      }
+    /* ---- Button Copied State ---- */
+    .btn-copied, .btn-copied:hover {
+      background: #16a34a !important;
+      color: #fff !important;
+      transform: none !important;
+    }
+    .btn-copied svg { stroke: #fff !important; opacity: 1 !important; }
 
-      button.primary:hover,
-      .file-btn:hover {
-        background: var(--primary-dark);
-      }
+    /* ---- 公众号浮窗 ---- */
+    .wx-float-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 999;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #07c160;
+      color: #fff;
+      border: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 18px rgba(7,193,96,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .wx-float-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 24px rgba(7,193,96,0.5);
+    }
 
-      button.secondary {
-        background: #eef2ff;
-        color: #1e3a8a;
-      }
+    .wx-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1001;
+      background: rgba(15,17,28,0.5);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .wx-overlay.closing { animation: fadeOut 0.2s ease forwards; }
 
-      button.secondary:hover {
-        background: #dbe4ff;
-      }
+    .wx-popup {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      position: relative;
+      animation: popIn 0.3s ease;
+    }
+    .wx-overlay.closing .wx-popup { animation: popOut 0.2s ease forwards; }
 
-      button.ghost {
-        background: #f3f4f6;
-        color: #344054;
-      }
+    .wx-popup .wx-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      background: #f3f4f6;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      transition: var(--transition);
+    }
+    .wx-popup .wx-close:hover { background: #e5e7eb; color: #374151; }
 
-      button.ghost:hover {
-        background: #e5e7eb;
-      }
+    .wx-popup img {
+      width: 190px;
+      height: 190px;
+      border-radius: 14px;
+      border: 1px solid #f0f0f0;
+      object-fit: contain;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
 
-      button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
+    .wx-popup h3 {
+      margin: 18px 0 8px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
 
-      .file-input {
-        display: none;
-      }
+    .wx-popup p {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
 
-      .meta {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 12px;
-      }
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes popIn  { from { opacity: 0; transform: scale(0.88) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes popOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.92) translateY(8px); } }
+  </style>
+</head>
+<body>
 
-      .field {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 10px 12px;
-      }
+<!-- Toast notification container -->
+<div class="toast-container" id="toastContainer"></div>
 
-      .label {
-        display: block;
-        font-size: 12px;
-        color: var(--muted);
-        margin-bottom: 6px;
-      }
+<!-- ======== Sidebar ======== -->
+<aside>
+  <div class="logo">
+    <img src="https://od.lk/s/OTZfMTA4MDQ5MzkwXw/gzhlogo.png" width="28" height="28" alt="logo" />
+    <span>friday工具箱</span>
+  </div>
+  <nav>
+    <div class="nav-group">图片</div>
+    <button class="nav-item active" data-tool="svg2png">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      SVG → PNG
+    </button>
+    <button class="nav-item" data-tool="img-compress">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 14 15 20 9"/><line x1="14" y1="9" x2="20" y2="9"/><line x1="14" y1="9" x2="14" y2="15"/></svg>
+      图片压缩
+    </button>
+    <button class="nav-item" data-tool="favicon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/><path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10"/></svg>
+      网站图标
+    </button>
 
-      .value {
-        font-weight: 700;
-        font-size: 14px;
-      }
+    <div class="nav-group">文本</div>
+    <button class="nav-item" data-tool="json-fmt">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      JSON 格式化
+    </button>
+    <button class="nav-item" data-tool="base64">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Base64 编解码
+    </button>
+    <button class="nav-item" data-tool="urlcode">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10"/></svg>
+      URL 编解码
+    </button>
+    <button class="nav-item" data-tool="b64img">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Base64 图片互转
+    </button>
+    <button class="nav-item" data-tool="http-headers">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      HTTP 头转 JSON
+    </button>
+    <button class="nav-item" data-tool="regex">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      正则测试
+    </button>
+    <button class="nav-item" data-tool="md-preview">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Markdown 预览
+    </button>
 
-      .preview-box {
-        flex: 1;
-        min-height: 200px;
-        border: 1px dashed #cfd5e3;
-        border-radius: 14px;
-        background: repeating-conic-gradient(#f8fafc 0% 25%, #eef2f7 0% 50%) 50% / 22px 22px;
-        display: grid;
-        place-items: center;
-        overflow: auto;
-        padding: 12px;
-      }
+    <div class="nav-group">开发</div>
+    <button class="nav-item" data-tool="timestamp">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      时间戳转换
+    </button>
+    <button class="nav-item" data-tool="uuid-gen">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 3v18"/></svg>
+      UUID 生成
+    </button>
+    <button class="nav-item" data-tool="color">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      颜色转换
+    </button>
+  </nav>
+  <div class="sidebar-footer">friday工具箱 v1.0</div>
+</aside>
 
-      .preview-box img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-      }
+<!-- ======== Main ======== -->
+<main>
 
-      .png-preview {
-        max-width: 100%;
-        display: none;
-      }
-
-      .notice {
-        margin-top: 10px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .notice.error {
-        color: #b42318;
-      }
-
-      .notice.success {
-        color: var(--success);
-      }
-
-      .tabs {
-        display: flex;
-        gap: 4px;
-        background: #f3f4f6;
-        border-radius: 10px;
-        padding: 4px;
-        margin-bottom: 12px;
-      }
-
-      .tab {
-        appearance: none;
-        border: 0;
-        border-radius: 8px;
-        padding: 6px 12px;
-        font: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        background: transparent;
-        color: var(--muted);
-        transition: 0.15s ease;
-      }
-
-      .tab.active {
-        background: var(--card);
-        color: var(--text);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      }
-
-      .tab:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-
-      .input-area {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-      }
-
-      .input-area textarea {
-        flex: 1;
-      }
-
-      .input-hint {
-        margin-top: 10px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-
-      .action-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 12px;
-        flex-wrap: wrap;
-      }
-
-      .action-bar .controls {
-        margin: 0;
-      }
-
-      @media (max-width: 960px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
-
-        textarea,
-        .preview-box {
-          min-height: 240px;
-        }
-
-        .meta {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <header>
-        <h1>SVG 转 PNG</h1>
-        <p class="sub">粘贴 SVG 或上传文件，预览后直接导出 PNG。支持透明背景。</p>
-      </header>
-
-      <div class="grid">
-        <section class="card">
-          <div class="card-hd">
-            <h2>输入 SVG</h2>
+  <!-- ========== SVG → PNG ========== -->
+  <section class="tool-panel active" id="tool-svg2png">
+    <div class="tool-header">
+      <h1>SVG 转 PNG</h1>
+      <p>粘贴 SVG 或上传文件，预览后导出 PNG，支持透明背景。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd">
+          <h2>输入 SVG</h2>
+          <div class="controls">
+            <label class="btn-file" for="svgFileInput">上传 SVG<input id="svgFileInput" type="file" accept=".svg,image/svg+xml" /></label>
+            <button id="svgSample" class="btn-ghost">示例</button>
+            <button id="svgClear" class="btn-ghost">清空</button>
+          </div>
+        </div>
+        <div class="card-bd">
+          <textarea id="svgTa" class="tall" spellcheck="false" placeholder="把 SVG 代码粘贴到这里..."></textarea>
+          <p class="notice mt-12" id="svgHint">支持直接粘贴完整 SVG 文本。</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>预览与导出</h2>
+          <button id="svgConvert" class="btn-primary">生成 PNG</button>
+        </div>
+        <div class="card-bd">
+          <div class="meta-row mb-12">
+            <div class="field"><span class="label">尺寸</span><div class="value" id="svgSize">-</div></div>
+            <div class="field"><span class="label">文件名</span><div class="value" id="svgName">svg.png</div></div>
+            <div class="field"><span class="label">状态</span><div class="value" id="svgStatus">等待输入</div></div>
+          </div>
+          <div class="tab-bar">
+            <button class="active" id="svgTabSvg">SVG 预览</button>
+            <button id="svgTabPng" disabled>PNG 预览</button>
+          </div>
+          <div class="preview-box" id="svgPreviewBox">
+            <img id="svgPrevImg" alt="SVG 预览" />
+            <img id="pngPrevImg" alt="PNG 预览" style="display:none;" />
+          </div>
+          <div class="flex-between mt-16">
+            <p class="notice" id="svgMsg">输入 SVG 后点击"生成 PNG"。</p>
             <div class="controls">
-              <label class="file-btn" for="fileInput">上传 SVG</label>
-              <input id="fileInput" class="file-input" type="file" accept=".svg,image/svg+xml" />
-              <button id="loadSample" class="ghost" type="button">示例</button>
-              <button id="clearBtn" class="ghost" type="button">清空</button>
+              <button id="svgDownload" class="btn-secondary" disabled>下载 PNG</button>
+              <button id="svgCopy" class="btn-ghost">复制 SVG</button>
             </div>
           </div>
-          <div class="card-bd">
-            <div class="input-area">
-              <textarea id="svgInput" spellcheck="false" placeholder="把 SVG 代码粘贴到这里..."></textarea>
-            </div>
-            <div class="input-hint" id="inputHint">支持直接粘贴完整 SVG 文本。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 图片压缩 ========== -->
+  <section class="tool-panel" id="tool-img-compress">
+    <div class="tool-header">
+      <h1>图片压缩</h1>
+      <p>上传图片，调整质量后下载压缩版本。输出 JPEG/WebP 格式，所有处理均在浏览器本地完成。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd"><h2>原始图片</h2></div>
+        <div class="card-bd">
+          <label class="btn-file mb-12" style="display:inline-flex;">
+            选择图片<input id="imgFileInput" type="file" accept="image/*" />
+          </label>
+          <div class="meta-row mb-12">
+            <div class="field"><span class="label">原始大小</span><div class="value" id="imgOrigSize">-</div></div>
+            <div class="field"><span class="label">尺寸</span><div class="value" id="imgOrigDim">-</div></div>
+            <div class="field"><span class="label">类型</span><div class="value" id="imgOrigType">-</div></div>
           </div>
-        </section>
-
-        <section class="card">
-          <div class="card-hd">
-            <h2>预览与导出</h2>
-            <button id="convertBtn" class="primary" type="button">生成 PNG</button>
+          <div class="preview-box" id="imgOrigBox">
+            <p class="notice" id="imgOrigPlaceholder">请选择一张图片。</p>
           </div>
-          <div class="card-bd">
-            <div class="meta">
-              <div class="field">
-                <span class="label">尺寸</span>
-                <div class="value" id="sizeInfo">-</div>
-              </div>
-              <div class="field">
-                <span class="label">文件名</span>
-                <div class="value" id="nameInfo">svg.png</div>
-              </div>
-              <div class="field">
-                <span class="label">状态</span>
-                <div class="value" id="statusInfo">等待输入</div>
-              </div>
-            </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>压缩结果</h2>
+          <select id="imgFormat" style="width:auto;padding:6px 10px;border-radius:8px;border:1px solid var(--line);font:inherit;font-size:12px;">
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+        <div class="card-bd">
+          <div style="margin-bottom:12px;">
+            <label class="input-label">质量: <span id="imgQualVal">80%</span></label>
+            <input type="range" id="imgQuality" min="10" max="100" value="80" style="width:100%;" />
+          </div>
+          <div class="meta-row mb-12">
+            <div class="field"><span class="label">压缩后大小</span><div class="value" id="imgCompSize">-</div></div>
+            <div class="field"><span class="label">压缩比</span><div class="value" id="imgRatio">-</div></div>
+          </div>
+          <div class="preview-box" id="imgCompBox">
+            <p class="notice" id="imgCompPlaceholder">调整质量后自动预览。</p>
+            <img id="imgCompPreview" style="max-width:100%;display:none;" alt="压缩预览" />
+          </div>
+          <div class="controls mt-12">
+            <button id="imgDownload" class="btn-primary" disabled>下载压缩图片</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-            <div class="tabs">
-              <button class="tab active" id="tabSvg" type="button">SVG 预览</button>
-              <button class="tab" id="tabPng" type="button" disabled>PNG 预览</button>
-            </div>
-
-            <div class="preview-box" id="previewBox">
-              <img id="svgPreview" alt="SVG 预览" />
-              <img id="pngPreview" class="png-preview" alt="PNG 预览" />
-            </div>
-
-            <div class="action-bar">
-              <p class="notice" id="message">输入 SVG 后点击“生成 PNG”。</p>
-              <div class="controls">
-                <button id="downloadBtn" class="secondary" type="button" disabled>下载 PNG</button>
-                <button id="copySvgBtn" class="ghost" type="button">复制 SVG</button>
-              </div>
+  <!-- ========== 网站图标获取 ========== -->
+  <section class="tool-panel" id="tool-favicon">
+    <div class="tool-header">
+      <h1>网站图标获取</h1>
+      <p>输入网站域名或 URL，自动获取网站的 favicon 图标。支持 SVG 格式的图标保存为 SVG 或转为 PNG。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd"><h2>输入网址</h2></div>
+        <div class="card-bd">
+          <label class="input-label">网站 URL</label>
+          <div style="display:flex;gap:10px;">
+            <input type="text" id="favUrl" placeholder="例如: github.com 或 https://www.example.com" style="flex:1;" />
+            <button id="favFetch" class="btn-primary">获取图标</button>
+          </div>
+          <div class="mt-12" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+            <span style="font-size:12px;color:var(--muted);">快速尝试：</span>
+            <button class="btn-ghost fav-quick" data-url="github.com" style="font-size:11px;padding:4px 10px;">GitHub</button>
+            <button class="btn-ghost fav-quick" data-url="google.com" style="font-size:11px;padding:4px 10px;">Google</button>
+            <button class="btn-ghost fav-quick" data-url="baidu.com" style="font-size:11px;padding:4px 10px;">百度</button>
+            <button class="btn-ghost fav-quick" data-url="zhihu.com" style="font-size:11px;padding:4px 10px;">知乎</button>
+            <button class="btn-ghost fav-quick" data-url="bilibili.com" style="font-size:11px;padding:4px 10px;">B站</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>图标预览</h2>
+          <div class="controls">
+            <button id="favDownload" class="btn-secondary" disabled>下载图标</button>
+            <button id="favCopyLink" class="btn-ghost">复制链接</button>
+          </div>
+        </div>
+        <div class="card-bd">
+          <div class="preview-box" id="favPreviewBox">
+            <p class="notice" id="favPlaceholder">输入网址后点击"获取图标"。</p>
+          </div>
+          <div class="meta-row mt-16" id="favMeta" style="display:none;">
+            <div class="field"><span class="label">类型</span><div class="value" id="favType">-</div></div>
+            <div class="field"><span class="label">来源</span><div class="value" id="favSource">-</div></div>
+          </div>
+          <div class="mt-16" id="favSvgActions" style="display:none;">
+            <p class="notice mb-12" style="color:#0891b2;font-weight:600;">📐 检测到 SVG 图标，可选择保存方式：</p>
+            <div class="controls">
+              <button id="favSaveSvg" class="btn-ghost">保存 SVG</button>
+              <button id="favSavePng" class="btn-primary">转为 PNG 下载</button>
             </div>
           </div>
-        </section>
+          <p class="notice mt-12" id="favMsg"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== JSON 格式化 ========== -->
+  <section class="tool-panel" id="tool-json-fmt">
+    <div class="tool-header">
+      <h1>JSON 格式化 / 校验</h1>
+      <p>粘贴 JSON 字符串，一键格式化或压缩。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd">
+          <h2>输入</h2>
+          <div class="controls">
+            <button id="jsonFmt" class="btn-primary">格式化</button>
+            <button id="jsonMin" class="btn-ghost">压缩</button>
+            <button id="jsonClear" class="btn-ghost">清空</button>
+          </div>
+        </div>
+        <div class="card-bd">
+          <textarea id="jsonInput" class="tall" spellcheck="false" placeholder='{"hello":"world"}'></textarea>
+          <p class="notice mt-12" id="jsonMsg"></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>输出</h2>
+          <button id="jsonCopy" class="btn-ghost">复制结果</button>
+        </div>
+        <div class="card-bd">
+          <textarea id="jsonOutput" class="tall" readonly placeholder="格式化后的 JSON 将显示在这里..."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Base64 编解码 ========== -->
+  <section class="tool-panel" id="tool-base64">
+    <div class="tool-header">
+      <h1>Base64 编解码</h1>
+      <p>文本与 Base64 之间互相转换。</p>
+    </div>
+    <div class="card mb-12">
+      <div class="card-hd">
+        <h2>编码 (文本 → Base64)</h2>
+        <div class="controls">
+          <button id="b64Encode" class="btn-primary">编码</button>
+          <button id="b64CopyEnc" class="btn-ghost">复制</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <textarea id="b64PlainInput" placeholder="输入要编码的文本..." style="min-height:100px;"></textarea>
+        <textarea id="b64EncOutput" class="mt-12" readonly placeholder="Base64 结果..." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <h2>解码 (Base64 → 文本)</h2>
+        <div class="controls">
+          <button id="b64Decode" class="btn-primary">解码</button>
+          <button id="b64CopyDec" class="btn-ghost">复制</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <textarea id="b64EncInput" placeholder="输入 Base64 字符串..." style="min-height:100px;"></textarea>
+        <textarea id="b64DecOutput" class="mt-12" readonly placeholder="解码结果..." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <p class="notice mt-12" id="b64Msg"></p>
+  </section>
+
+  <!-- ========== URL 编解码 ========== -->
+  <section class="tool-panel" id="tool-urlcode">
+    <div class="tool-header">
+      <h1>URL 编解码</h1>
+      <p>对 URL 字符串进行 encodeURIComponent / decodeURIComponent 操作。</p>
+    </div>
+    <div class="card mb-12">
+      <div class="card-hd">
+        <h2>编码 (encodeURIComponent)</h2>
+        <div class="controls">
+          <button id="urlEncode" class="btn-primary">编码</button>
+          <button id="urlCopyEnc" class="btn-ghost">复制</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <textarea id="urlPlainInput" placeholder="输入要编码的文本..." style="min-height:80px;"></textarea>
+        <textarea id="urlEncOutput" class="mt-12" readonly placeholder="编码结果..." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <h2>解码 (decodeURIComponent)</h2>
+        <div class="controls">
+          <button id="urlDecode" class="btn-primary">解码</button>
+          <button id="urlCopyDec" class="btn-ghost">复制</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <textarea id="urlEncInput" placeholder="输入 URL 编码字符串..." style="min-height:80px;"></textarea>
+        <textarea id="urlDecOutput" class="mt-12" readonly placeholder="解码结果..." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <p class="notice mt-12" id="urlMsg"></p>
+  </section>
+
+  <!-- ========== 正则测试 ========== -->
+  <section class="tool-panel" id="tool-regex">
+    <div class="tool-header">
+      <h1>正则表达式测试</h1>
+      <p>输入正则和测试文本，查看匹配结果。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd"><h2>正则 & 文本</h2></div>
+        <div class="card-bd">
+          <label class="input-label">正则表达式</label>
+          <div style="display:flex;gap:10px;margin-bottom:12px;">
+            <span style="font:13px/1.5 monospace;padding:12px 0;color:var(--muted);">/</span>
+            <input type="text" id="regexPattern" placeholder="例如: \d{4}-\d{2}-\d{2}" style="flex:1;" />
+            <span style="font:13px/1.5 monospace;padding:12px 0;color:var(--muted);">/</span>
+            <select id="regexFlags" style="width:auto;padding:12px 8px;">
+              <option value="">无</option>
+              <option value="g">g</option>
+              <option value="gi">gi</option>
+              <option value="gm">gm</option>
+              <option value="gim">gim</option>
+              <option value="i">i</option>
+              <option value="m">m</option>
+            </select>
+          </div>
+          <label class="input-label">测试文本</label>
+          <textarea id="regexText" placeholder="输入要测试的文本..." style="min-height:140px;"></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>匹配结果</h2>
+          <span id="regexCount" style="font-size:13px;color:var(--muted);"></span>
+        </div>
+        <div class="card-bd">
+          <div id="regexOutput" style="font:13px/1.5 monospace;min-height:200px;overflow:auto;max-height:400px;"></div>
+          <p class="notice mt-12" id="regexMsg"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Markdown 预览 ========== -->
+  <section class="tool-panel" id="tool-md-preview">
+    <div class="tool-header">
+      <h1>Markdown 预览</h1>
+      <p>编写 Markdown，实时预览渲染效果。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd">
+          <h2>Markdown 源码</h2>
+          <button id="mdSample" class="btn-ghost">示例</button>
+        </div>
+        <div class="card-bd">
+          <textarea id="mdInput" class="tall" spellcheck="false" placeholder="输入 Markdown 文本..."></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>预览</h2>
+          <button id="mdCopy" class="btn-ghost">复制 HTML</button>
+        </div>
+        <div class="card-bd">
+          <div id="mdOutput" class="md-body" style="min-height:240px;max-height:500px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:12px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 时间戳转换 ========== -->
+  <section class="tool-panel" id="tool-timestamp">
+    <div class="tool-header">
+      <h1>时间戳转换</h1>
+      <p>Unix 时间戳与日期时间之间互相转换。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd"><h2>时间戳 → 日期</h2></div>
+        <div class="card-bd">
+          <label class="input-label">Unix 时间戳（秒或毫秒）</label>
+          <input type="text" id="tsInput" placeholder="例如: 1716998400 或 1716998400000" />
+          <div class="controls mt-12">
+            <button id="tsNow" class="btn-ghost">当前时间戳</button>
+            <button id="tsConvert" class="btn-primary">转换</button>
+          </div>
+          <div class="meta-row mt-16" id="tsResults">
+            <div class="field"><span class="label">本地时间</span><div class="value" id="tsLocal">-</div></div>
+            <div class="field"><span class="label">UTC 时间</span><div class="value" id="tsUtc">-</div></div>
+            <div class="field"><span class="label">ISO 8601</span><div class="value" id="tsIso">-</div></div>
+            <div class="field"><span class="label">星期</span><div class="value" id="tsDay">-</div></div>
+          </div>
+          <p class="notice mt-12" id="tsMsg"></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h2>日期 → 时间戳</h2></div>
+        <div class="card-bd">
+          <label class="input-label">日期时间</label>
+          <input type="datetime-local" id="dtInput" style="margin-bottom:12px;" />
+          <div class="controls">
+            <button id="dtNow" class="btn-ghost">当前时间</button>
+            <button id="dtConvert" class="btn-primary">转换</button>
+          </div>
+          <div class="meta-row mt-16">
+            <div class="field"><span class="label">秒级时间戳</span><div class="value" id="dtSec">-</div></div>
+            <div class="field"><span class="label">毫秒级时间戳</span><div class="value" id="dtMs">-</div></div>
+          </div>
+          <div class="controls mt-12">
+            <button id="dtCopySec" class="btn-ghost">复制秒</button>
+            <button id="dtCopyMs" class="btn-ghost">复制毫秒</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== UUID 生成 ========== -->
+  <section class="tool-panel" id="tool-uuid-gen">
+    <div class="tool-header">
+      <h1>UUID 生成器</h1>
+      <p>一键生成 UUID v4 随机标识符。</p>
+    </div>
+    <div class="card" style="max-width:600px;">
+      <div class="card-hd"><h2>生成 UUID</h2></div>
+      <div class="card-bd">
+        <div class="controls mb-12">
+          <button id="uuidGen1" class="btn-primary">生成 1 个</button>
+          <button id="uuidGen5" class="btn-secondary">生成 5 个</button>
+          <button id="uuidGen10" class="btn-ghost">生成 10 个</button>
+          <button id="uuidCopy" class="btn-ghost">复制全部</button>
+          <button id="uuidClear" class="btn-ghost">清空</button>
+        </div>
+        <textarea id="uuidOutput" readonly placeholder="点击上方按钮生成 UUID..." style="min-height:100px;font-family:monospace;"></textarea>
+        <p class="notice mt-12" id="uuidMsg"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 颜色转换 ========== -->
+  <section class="tool-panel" id="tool-color">
+    <div class="tool-header">
+      <h1>颜色转换器</h1>
+      <p>HEX、RGB、HSL 颜色格式互相转换，附带颜色选择器。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd"><h2>颜色输入</h2></div>
+        <div class="card-bd">
+          <div class="color-swatch" id="colorSwatch"></div>
+          <div class="mt-12" style="display:flex;gap:10px;align-items:center;">
+            <input type="color" id="colorPicker" value="#2563eb" style="width:48px;height:48px;border:0;cursor:pointer;border-radius:10px;" />
+            <input type="text" id="colorInput" placeholder="#2563eb 或 rgb(37,99,235) 或 hsl(221,83%,53%)" style="flex:1;" />
+            <button id="colorParse" class="btn-primary">解析</button>
+          </div>
+          <div class="meta-row mt-16">
+            <div class="field"><span class="label">HEX</span><div class="value" id="colorHex">#2563eb</div></div>
+            <div class="field"><span class="label">RGB</span><div class="value" id="colorRgb">rgb(37, 99, 235)</div></div>
+            <div class="field"><span class="label">HSL</span><div class="value" id="colorHsl">hsl(221, 83%, 53%)</div></div>
+          </div>
+          <div class="controls mt-12" style="gap:6px;">
+            <button id="colorCopyHex" class="btn-ghost" style="font-size:12px;">HEX</button>
+            <button id="colorCopyRgb" class="btn-ghost" style="font-size:12px;">RGB</button>
+            <button id="colorCopyHsl" class="btn-ghost" style="font-size:12px;">HSL</button>
+            <button id="colorCopyAll" class="btn-secondary" style="font-size:12px;">复制全部</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h2>预设色板</h2></div>
+        <div class="card-bd">
+          <div id="colorPalette" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Base64 图片互转 ========== -->
+  <section class="tool-panel" id="tool-b64img">
+    <div class="tool-header">
+      <h1>Base64 图片互转</h1>
+      <p>Base64 ↔ 图片双向转换：粘贴 Base64 预览图片，或上传图片生成 Base64 编码。</p>
+    </div>
+
+    <!-- Base64 → Image -->
+    <div class="card mb-12">
+      <div class="card-hd">
+        <h2>Base64 → 图片</h2>
+        <button id="b64iClear" class="btn-ghost">清空</button>
+      </div>
+      <div class="card-bd">
+        <div class="grid-2" style="gap:16px;">
+          <div>
+            <textarea id="b64iInput" style="min-height:160px;" placeholder="粘贴 Base64 图片字符串...&#10;例如: data:image/png;base64,iVBORw0KGgo..."></textarea>
+            <div class="controls mt-12">
+              <button id="b64iPreview" class="btn-primary">预览图片</button>
+              <button id="b64iCopyData" class="btn-ghost">复制 Data URL</button>
+              <button id="b64iDownload" class="btn-secondary" disabled>下载图片</button>
+            </div>
+            <p class="notice mt-12" id="b64iMsg"></p>
+          </div>
+          <div>
+            <div class="meta-row mb-12">
+              <div class="field"><span class="label">格式</span><div class="value" id="b64iFormat">-</div></div>
+              <div class="field"><span class="label">尺寸</span><div class="value" id="b64iDim">-</div></div>
+              <div class="field"><span class="label">大小</span><div class="value" id="b64iSize">-</div></div>
+            </div>
+            <div class="preview-box" id="b64iBox">
+              <p class="notice">输入 Base64 后点击预览。</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <script>
-      const svgInput = document.getElementById('svgInput');
-      const fileInput = document.getElementById('fileInput');
-      const convertBtn = document.getElementById('convertBtn');
-      const downloadBtn = document.getElementById('downloadBtn');
-      const copySvgBtn = document.getElementById('copySvgBtn');
-      const clearBtn = document.getElementById('clearBtn');
-      const loadSampleBtn = document.getElementById('loadSample');
-      const svgPreview = document.getElementById('svgPreview');
-      const pngPreview = document.getElementById('pngPreview');
-      const message = document.getElementById('message');
-      const inputHint = document.getElementById('inputHint');
-      const sizeInfo = document.getElementById('sizeInfo');
-      const nameInfo = document.getElementById('nameInfo');
-      const statusInfo = document.getElementById('statusInfo');
-      const tabSvg = document.getElementById('tabSvg');
-      const tabPng = document.getElementById('tabPng');
+    <!-- Image → Base64 -->
+    <div class="card">
+      <div class="card-hd">
+        <h2>图片 → Base64</h2>
+        <div class="controls">
+          <button id="img2b64CopyAll" class="btn-ghost">复制全部</button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <div class="grid-2" style="gap:16px;">
+          <div>
+            <label class="btn-file mb-12" style="display:inline-flex;">
+              选择图片<input id="img2b64File" type="file" accept="image/*" />
+            </label>
+            <p class="notice" id="img2b64Hint">支持 PNG / JPEG / GIF / WebP / BMP / SVG。</p>
+            <div class="preview-box mt-12" id="img2b64Box">
+              <p class="notice">请选择一张图片。</p>
+            </div>
+          </div>
+          <div>
+            <label class="input-label">Data URL（含前缀，可直接用于 img src）</label>
+            <textarea id="img2b64DataUrl" readonly style="min-height:90px;font-size:11px;word-break:break-all;" placeholder="选择图片后自动生成..."></textarea>
+            <div class="controls mt-12">
+              <button id="img2b64CopyData" class="btn-ghost">复制 Data URL</button>
+              <button id="img2b64CopyRaw" class="btn-ghost">复制纯 Base64</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      let lastPngUrl = '';
-      let lastFileName = 'svg.png';
+  <!-- ========== HTTP 头转 JSON ========== -->
+  <section class="tool-panel" id="tool-http-headers">
+    <div class="tool-header">
+      <h1>HTTP 请求/响应头 转 JSON</h1>
+      <p>粘贴浏览器 DevTools 或抓包工具中复制的原始 HTTP 请求头/响应头，一键转为结构化 JSON 或代码。</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-hd">
+          <h2>原始 Headers</h2>
+          <div class="controls">
+            <button id="httpSample" class="btn-ghost">示例</button>
+            <button id="httpClear" class="btn-ghost">清空</button>
+          </div>
+        </div>
+        <div class="card-bd">
+          <textarea id="httpInput" class="tall" spellcheck="false" placeholder="粘贴 HTTP Headers...&#10;&#10;例如:&#10;GET /api/users HTTP/1.1&#10;Host: example.com&#10;Content-Type: application/json&#10;Authorization: Bearer token123"></textarea>
+          <div class="controls mt-12">
+            <button id="httpToJson" class="btn-primary">转为 JSON</button>
+            <button id="httpToJs" class="btn-ghost">转为 JS 对象</button>
+            <button id="httpToCurl" class="btn-ghost">生成 cURL</button>
+          </div>
+          <p class="notice mt-12" id="httpMsg"></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h2>输出</h2>
+          <button id="httpCopy" class="btn-ghost">复制结果</button>
+        </div>
+        <div class="card-bd">
+          <textarea id="httpOutput" class="tall" readonly placeholder="转换结果将显示在这里..."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="300" viewBox="0 0 520 300">
+</main>
+
+<script>
+// ============ Navigation ============
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tool-' + btn.dataset.tool).classList.add('active');
+  });
+});
+
+// =============================================
+// ========== SVG → PNG ========================
+// =============================================
+(function() {
+  const ta = document.getElementById('svgTa');
+  const fileInput = document.getElementById('svgFileInput');
+  const convertBtn = document.getElementById('svgConvert');
+  const downloadBtn = document.getElementById('svgDownload');
+  const svgPrevImg = document.getElementById('svgPrevImg');
+  const pngPrevImg = document.getElementById('pngPrevImg');
+  const msg = document.getElementById('svgMsg');
+  const hint = document.getElementById('svgHint');
+  const sizeInfo = document.getElementById('svgSize');
+  const nameInfo = document.getElementById('svgName');
+  const statusInfo = document.getElementById('svgStatus');
+  const tabSvg = document.getElementById('svgTabSvg');
+  const tabPng = document.getElementById('svgTabPng');
+  let lastPngUrl = '';
+  let lastSvgPreviewUrl = '';
+
+  const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="300" viewBox="0 0 520 300">
   <defs>
     <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0%" stop-color="#2563eb" />
@@ -412,216 +1308,1322 @@
   <text x="260" y="193" text-anchor="middle" fill="#e0e7ff" font-size="18" font-family="Arial, sans-serif">Paste, preview, convert, download</text>
 </svg>`;
 
-      function setMessage(text, type = '') {
-        message.textContent = text;
-        message.className = `notice${type ? ' ' + type : ''}`;
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  function escapeFilename(name) {
+    return name.replace(/[^a-z0-9._-]+/gi, '_').replace(/^_+|_+$/g, '') || 'svg';
+  }
+
+  function inferSize(svgText) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const svg = doc.querySelector('svg');
+    if (!svg) throw new Error('未找到 SVG 根节点');
+    let w = parseFloat(svg.getAttribute('width') || '0');
+    let h = parseFloat(svg.getAttribute('height') || '0');
+    const vb = svg.getAttribute('viewBox');
+    if ((!w || !h) && vb) {
+      const parts = vb.split(/\s+/).map(Number);
+      if (parts.length === 4) { w = w || parts[2]; h = h || parts[3]; }
+    }
+    return { width: Math.max(1, Math.round(w || 512)), height: Math.max(1, Math.round(h || 512)) };
+  }
+
+  function updateSvgPreview(svgText) {
+    // Revoke previous SVG preview URL
+    if (lastSvgPreviewUrl) { URL.revokeObjectURL(lastSvgPreviewUrl); lastSvgPreviewUrl = ''; }
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    lastSvgPreviewUrl = url;
+    svgPrevImg.src = url;
+    svgPrevImg.style.display = 'block';
+    pngPrevImg.style.display = 'none';
+    tabSvg.classList.add('active'); tabPng.classList.remove('active');
+    if (lastPngUrl) { URL.revokeObjectURL(lastPngUrl); lastPngUrl = ''; }
+    svgPrevImg.onload = () => URL.revokeObjectURL(url);
+  }
+
+  function showTab(type) {
+    if (type === 'svg') {
+      svgPrevImg.style.display = 'block'; pngPrevImg.style.display = 'none';
+      tabSvg.classList.add('active'); tabPng.classList.remove('active');
+    } else {
+      svgPrevImg.style.display = 'none'; pngPrevImg.style.display = 'block';
+      tabPng.classList.add('active'); tabSvg.classList.remove('active');
+    }
+  }
+
+  async function convertSvgToPng(svgText) {
+    const { width, height } = inferSize(svgText);
+    const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    try {
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('SVG 解析失败')); img.src = svgUrl; });
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      if (!blob) throw new Error('PNG 生成失败');
+if (lastPngUrl) URL.revokeObjectURL(lastPngUrl);
+      lastPngUrl = URL.createObjectURL(blob);
+      pngPrevImg.src = lastPngUrl;
+      showTab('png');
+      downloadBtn.disabled = false;
+            downloadBtn.dataset.url = lastPngUrl;
+      sizeInfo.textContent = `${width} × ${height}`;
+      statusInfo.textContent = '已生成';
+      setMsg('PNG 已生成，可以直接下载。', 'success');
+      return blob;
+    } finally { URL.revokeObjectURL(svgUrl); }
+  }
+
+  async function syncInput() {
+    const svgText = ta.value.trim();
+    if (!svgText) {
+      svgPrevImg.removeAttribute('src'); pngPrevImg.removeAttribute('src');
+      pngPrevImg.style.display = 'none'; svgPrevImg.style.display = 'block';
+      downloadBtn.disabled = true; tabPng.disabled = true;
+      statusInfo.textContent = '等待输入'; sizeInfo.textContent = '-';
+      nameInfo.textContent = 'svg.png'; setMsg('输入 SVG 后点击"生成 PNG"。');
+      return;
+    }
+    try {
+      const { width, height } = inferSize(svgText);
+      sizeInfo.textContent = `${width} × ${height}`;
+      const name = (ta.dataset.filename || 'svg').replace(/\.svg$/i, '');
+      nameInfo.textContent = `${escapeFilename(name)}.png`;
+      statusInfo.textContent = '可预览';
+      updateSvgPreview(svgText);
+      setMsg('SVG 已加载，点击"生成 PNG"即可。');
+    } catch (err) { setMsg(err.message, 'error'); statusInfo.textContent = '错误'; }
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]; if (!file) return;
+    const text = await file.text();
+    ta.value = text; ta.dataset.filename = file.name;
+    hint.textContent = `已载入文件：${file.name}`;
+    await syncInput();
+  });
+
+  ta.addEventListener('input', syncInput);
+  convertBtn.addEventListener('click', async () => {
+    const svgText = ta.value.trim();
+    if (!svgText) return setMsg('请先输入 SVG。', 'error');
+    convertBtn.disabled = true; downloadBtn.disabled = true;     statusInfo.textContent = '转换中'; setMsg('正在生成 PNG...');
+    try { await convertSvgToPng(svgText); tabPng.disabled = false; }
+    catch (err) { statusInfo.textContent = '失败'; setMsg(err.message || '转换失败。', 'error'); }
+    finally { convertBtn.disabled = false; }
+  });
+  downloadBtn.addEventListener('click', () => {
+    const url = downloadBtn.dataset.url; if (!url) return;
+    const a = document.createElement('a'); a.href = url; a.download = nameInfo.textContent || 'svg.png'; a.click();
+  });
+  document.getElementById('svgCopy').addEventListener('click', () => {
+    copyWithFeedback(ta.value.trim(), document.getElementById('svgCopy'), 'SVG ');
+  });
+  document.getElementById('svgClear').addEventListener('click', () => {
+    ta.value = ''; ta.dataset.filename = ''; fileInput.value = '';
+    hint.textContent = '支持直接粘贴完整 SVG 文本。'; syncInput();
+  });
+  document.getElementById('svgSample').addEventListener('click', () => {
+    ta.dataset.filename = 'sample.svg'; ta.value = sampleSvg;
+    hint.textContent = '已加载示例 SVG。'; syncInput();
+  });
+  tabSvg.addEventListener('click', () => showTab('svg'));
+  tabPng.addEventListener('click', () => { if (lastPngUrl) showTab('png'); });
+  syncInput();
+})();
+
+// ========== 图片压缩 ==========================
+(function() {
+  const fileInput = document.getElementById('imgFileInput');
+  const origBox = document.getElementById('imgOrigBox');
+  const origPlaceholder = document.getElementById('imgOrigPlaceholder');
+  const compPlaceholder = document.getElementById('imgCompPlaceholder');
+  const compPreview = document.getElementById('imgCompPreview');
+  const qualitySlider = document.getElementById('imgQuality');
+  const qualVal = document.getElementById('imgQualVal');
+  const formatSel = document.getElementById('imgFormat');
+  const origSize = document.getElementById('imgOrigSize');
+  const origDim = document.getElementById('imgOrigDim');
+  const origType = document.getElementById('imgOrigType');
+  const compSize = document.getElementById('imgCompSize');
+  const ratioEl = document.getElementById('imgRatio');
+  const downloadBtn = document.getElementById('imgDownload');
+
+  let origImg = null, origBytes = 0, origBlobUrl = null;
+  let compBlobUrl = null, debounceTimer = null;
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]; if (!file) return;
+
+    // Clean up previous
+    if (origBlobUrl) URL.revokeObjectURL(origBlobUrl);
+    if (compBlobUrl) URL.revokeObjectURL(compBlobUrl);
+    compBlobUrl = null; compPreview.style.display = 'none';
+    downloadBtn.disabled = true;
+
+    origBytes = file.size;
+    origSize.textContent = formatBytes(origBytes);
+    origType.textContent = file.type || file.name.split('.').pop().toUpperCase();
+
+    origBlobUrl = URL.createObjectURL(file);
+    origImg = new Image();
+    origImg.onload = () => {
+      origDim.textContent = `${origImg.naturalWidth} × ${origImg.naturalHeight}`;
+      // Reuse img element for original preview
+      if (origPlaceholder) origPlaceholder.style.display = 'none';
+      let origImgEl = origBox.querySelector('img');
+      if (!origImgEl) {
+        origImgEl = document.createElement('img');
+        origImgEl.style.cssText = 'max-width:100%;display:block;';
+        origBox.appendChild(origImgEl);
       }
+      origImgEl.src = origBlobUrl;
+      doCompress();
+    };
+    origImg.src = origBlobUrl;
+  });
 
-      function escapeFilename(name) {
-        return name.replace(/[^a-z0-9._-]+/gi, '_').replace(/^_+|_+$/g, '') || 'svg';
+  qualitySlider.addEventListener('input', () => {
+    qualVal.textContent = qualitySlider.value + '%';
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(doCompress, 150);
+  });
+
+  formatSel.addEventListener('change', () => doCompress());
+
+  async function doCompress() {
+    if (!origImg) return;
+
+    const mimeType = formatSel.value;
+    const quality = qualitySlider.value / 100;
+    const canvas = document.createElement('canvas');
+    canvas.width = origImg.naturalWidth;
+    canvas.height = origImg.naturalHeight;
+    const ctx = canvas.getContext('2d');
+
+    // Fill white bg for JPEG (handles PNG transparency properly)
+    if (mimeType === 'image/jpeg') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(origImg, 0, 0);
+
+    const blob = await new Promise(r => canvas.toBlob(r, mimeType, quality));
+    const compressedBytes = blob.size;
+
+    // Update preview — reuse img element, no DOM churn
+    if (compPlaceholder) compPlaceholder.style.display = 'none';
+    if (compBlobUrl) URL.revokeObjectURL(compBlobUrl);
+    compBlobUrl = URL.createObjectURL(blob);
+    compPreview.src = compBlobUrl;
+    compPreview.style.display = 'block';
+
+    compSize.textContent = formatBytes(compressedBytes);
+
+    const ratio = ((1 - compressedBytes / origBytes) * 100);
+    const sign = ratio >= 0 ? '-' : '+';
+    ratioEl.textContent = sign + Math.abs(ratio).toFixed(1) + '%';
+    ratioEl.style.color = ratio >= 0 ? 'var(--success)' : 'var(--danger)';
+
+    downloadBtn.disabled = false;
+    downloadBtn.onclick = () => {
+      const ext = mimeType === 'image/webp' ? 'webp' : 'jpg';
+      const a = document.createElement('a');
+      a.href = compBlobUrl;
+      a.download = 'compressed.' + ext;
+      a.click();
+    };
+  }
+
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+    return (b / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+})();
+
+// =============================================
+// ========== JSON 格式化 ========================
+// =============================================
+(function() {
+  const input = document.getElementById('jsonInput');
+  const output = document.getElementById('jsonOutput');
+  const msg = document.getElementById('jsonMsg');
+
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  document.getElementById('jsonFmt').addEventListener('click', () => {
+    try {
+      const obj = JSON.parse(input.value.trim() || '{}');
+      output.value = JSON.stringify(obj, null, 2);
+      setMsg('格式化成功！', 'success');
+    } catch (e) { setMsg('JSON 解析错误: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('jsonMin').addEventListener('click', () => {
+    try {
+      const obj = JSON.parse(input.value.trim() || '{}');
+      output.value = JSON.stringify(obj);
+      setMsg('压缩成功！', 'success');
+    } catch (e) { setMsg('JSON 解析错误: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('jsonClear').addEventListener('click', () => {
+    input.value = ''; output.value = ''; setMsg('');
+  });
+
+  document.getElementById('jsonCopy').addEventListener('click', () => {
+    copyWithFeedback(output.value.trim(), document.getElementById('jsonCopy'), 'JSON ');
+  });
+
+  // Live validation on input
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    if (!val) { setMsg(''); return; }
+    try { JSON.parse(val); setMsg('✓ 有效的 JSON', 'success'); }
+    catch (e) { setMsg('✗ ' + e.message, 'error'); }
+  });
+})();
+
+// =============================================
+// ========== Base64 编解码 ======================
+// =============================================
+(function() {
+  const msg = document.getElementById('b64Msg');
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  document.getElementById('b64Encode').addEventListener('click', () => {
+    const text = document.getElementById('b64PlainInput').value;
+    if (!text) return setMsg('请输入要编码的文本。', 'error');
+    try {
+      const bytes = new TextEncoder().encode(text);
+      const binary = String.fromCharCode(...bytes);
+      document.getElementById('b64EncOutput').value = btoa(binary);
+      setMsg('编码成功！', 'success');
+    } catch (e) { setMsg('编码失败: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('b64Decode').addEventListener('click', () => {
+    const text = document.getElementById('b64EncInput').value.trim();
+    if (!text) return setMsg('请输入 Base64 字符串。', 'error');
+    try {
+      const binary = atob(text);
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      document.getElementById('b64DecOutput').value = new TextDecoder().decode(bytes);
+      setMsg('解码成功！', 'success');
+    } catch (e) { setMsg('解码失败，请检查 Base64 字符串是否正确。', 'error'); }
+  });
+
+  document.getElementById('b64CopyEnc').addEventListener('click', () => copyWithFeedback(document.getElementById('b64EncOutput').value.trim(), document.getElementById('b64CopyEnc'), 'Base64 '));
+  document.getElementById('b64CopyDec').addEventListener('click', () => copyWithFeedback(document.getElementById('b64DecOutput').value.trim(), document.getElementById('b64CopyDec'), 'Base64 '));
+})();
+
+// =============================================
+// ========== URL 编解码 ========================
+// =============================================
+(function() {
+  const msg = document.getElementById('urlMsg');
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  document.getElementById('urlEncode').addEventListener('click', () => {
+    const text = document.getElementById('urlPlainInput').value;
+    if (!text) return setMsg('请输入要编码的文本。', 'error');
+    document.getElementById('urlEncOutput').value = encodeURIComponent(text);
+    setMsg('编码成功！', 'success');
+  });
+
+  document.getElementById('urlDecode').addEventListener('click', () => {
+    const text = document.getElementById('urlEncInput').value.trim();
+    if (!text) return setMsg('请输入 URL 编码字符串。', 'error');
+    try {
+      document.getElementById('urlDecOutput').value = decodeURIComponent(text);
+      setMsg('解码成功！', 'success');
+    } catch (e) { setMsg('解码失败: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('urlCopyEnc').addEventListener('click', () => copyWithFeedback(document.getElementById('urlEncOutput').value.trim(), document.getElementById('urlCopyEnc'), 'URL '));
+  document.getElementById('urlCopyDec').addEventListener('click', () => copyWithFeedback(document.getElementById('urlDecOutput').value.trim(), document.getElementById('urlCopyDec'), 'URL '));
+})();
+
+// =============================================
+// ========== 正则测试 ==========================
+// =============================================
+(function() {
+  const patternEl = document.getElementById('regexPattern');
+  const flagsEl = document.getElementById('regexFlags');
+  const textEl = document.getElementById('regexText');
+  const outputEl = document.getElementById('regexOutput');
+  const countEl = document.getElementById('regexCount');
+  const msgEl = document.getElementById('regexMsg');
+
+  function setMsg(text, type) { msgEl.textContent = text; msgEl.className = 'notice' + (type ? ' ' + type : ''); }
+
+  function runRegex() {
+    const pattern = patternEl.value;
+    const flags = flagsEl.value;
+    const text = textEl.value;
+    outputEl.innerHTML = ''; countEl.textContent = ''; setMsg('');
+
+    if (!pattern) { setMsg('请输入正则表达式。', 'error'); return; }
+    if (!text) { setMsg('请输入测试文本。', 'error'); return; }
+
+    try {
+      const re = new RegExp(pattern, flags);
+      if (flags.includes('g')) {
+        const matches = [...text.matchAll(re)];
+        if (matches.length === 0) { outputEl.innerHTML = '<span style="color:var(--muted);">无匹配。</span>'; return; }
+        countEl.textContent = `共 ${matches.length} 个匹配`;
+        outputEl.innerHTML = matches.map((m, i) => {
+          const groups = m.groups ? Object.entries(m.groups).map(([k, v]) => `<span style="color:var(--muted);">${k}:</span> <mark>${escHtml(v)}</mark>`).join(' ') : '';
+          const info = `<div style="margin-bottom:6px;color:var(--muted);font-size:11px;">匹配 #${i + 1} (索引 ${m.index}) ${groups}</div>`;
+          return info + highlightMatch(text, m.index, m[0].length);
+        }).join('<hr style="border:0;border-top:1px dashed var(--line);margin:10px 0;">');
+      } else {
+        const m = text.match(re);
+        if (!m) { outputEl.innerHTML = '<span style="color:var(--muted);">无匹配。</span>'; return; }
+        countEl.textContent = '1 个匹配';
+        const groups = m.groups ? Object.entries(m.groups).map(([k, v]) => `<span style="color:var(--muted);">${k}:</span> <mark>${escHtml(v)}</mark>`).join(' ') : '';
+        outputEl.innerHTML = `<div style="margin-bottom:4px;color:var(--muted);font-size:11px;">匹配 (索引 ${m.index}) ${groups}</div>` + highlightMatch(text, m.index, m[0].length);
       }
+    } catch (e) {
+      setMsg('正则表达式错误: ' + e.message, 'error');
+    }
+  }
 
-      function inferSize(svgText) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svgText, 'image/svg+xml');
-        const svg = doc.querySelector('svg');
-        if (!svg) throw new Error('未找到 SVG 根节点');
+  function escHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-        let width = parseFloat(svg.getAttribute('width') || '0');
-        let height = parseFloat(svg.getAttribute('height') || '0');
-        const viewBox = svg.getAttribute('viewBox');
+  function highlightMatch(text, idx, len) {
+    const before = escHtml(text.slice(Math.max(0, idx - 40), idx));
+    const match = '<mark style="background:#fde68a;padding:1px 3px;border-radius:3px;">' + escHtml(text.slice(idx, idx + len)) + '</mark>';
+    const after = escHtml(text.slice(idx + len, idx + len + 60));
+    const prefix = idx > 40 ? '…' : '';
+    const suffix = idx + len + 60 < text.length ? '…' : '';
+    return `<pre style="margin:0;background:#f9fafb;border-radius:6px;padding:8px;overflow-x:auto;white-space:pre-wrap;font-size:12px;">${prefix}${before}${match}${after}${suffix}</pre>`;
+  }
 
-        if ((!width || !height) && viewBox) {
-          const parts = viewBox.split(/\s+/).map(Number);
-          if (parts.length === 4) {
-            width = width || parts[2];
-            height = height || parts[3];
-          }
-        }
+  [patternEl, flagsEl, textEl].forEach(el => el.addEventListener('input', runRegex));
+})();
 
-        if (!width || !height) {
-          width = 512;
-          height = 512;
-        }
+// =============================================
+// ========== Markdown 预览 =====================
+// =============================================
+(function() {
+  const input = document.getElementById('mdInput');
+  const output = document.getElementById('mdOutput');
 
-        return {
-          width: Math.max(1, Math.round(width)),
-          height: Math.max(1, Math.round(height)),
-        };
+  // Simple markdown parser (no external lib needed)
+  function renderMd(text) {
+    // Phase 1: protect code blocks and inline code with placeholders
+    const blocks = [];
+    let html = text;
+    // Fenced code blocks ```
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      blocks.push(`<pre><code class="lang-${lang}">${escHtml(code.trim())}</code></pre>`);
+      return `\x00BLOCK${blocks.length - 1}\x00`;
+    });
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, (_, code) => {
+      blocks.push(`<code>${escHtml(code)}</code>`);
+      return `\x00BLOCK${blocks.length - 1}\x00`;
+    });
+
+    // Phase 2: escape remaining HTML
+    html = escHtml(html);
+
+    // Phase 3: restore code placeholders
+    html = html.replace(/\x00BLOCK(\d+)\x00/g, (_, i) => blocks[+i]);
+
+    // Phase 4: block-level elements (line-based)
+    // Images
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;" />');
+    // Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    // Bold
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // Strikethrough
+    html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    // Headings
+    html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // Blockquote
+    html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+    // Horizontal rule
+    html = html.replace(/^---$/gm, '<hr />');
+    // Ordered list (must process before unordered to avoid conflict)
+    html = html.replace(/^\d+\. (.+)$/gm, (_, item) => `\x00OLI\x00${item}\x00/OLI\x00`);
+    // Unordered list
+    html = html.replace(/^[\-\*] (.+)$/gm, (_, item) => `\x00ULI\x00${item}\x00/ULI\x00`);
+    // Wrap ordered list items in <ol>
+    html = html.replace(/(\x00OLI\x00[^\x00]+\x00\/OLI\x00\n?)+/g, (match) => {
+      const items = match.replace(/\x00OLI\x00/g, '<li>').replace(/\x00\/OLI\x00/g, '</li>');
+      return '<ol>' + items + '</ol>';
+    });
+    // Wrap unordered list items in <ul>
+    html = html.replace(/(\x00ULI\x00[^\x00]+\x00\/ULI\x00\n?)+/g, (match) => {
+      const items = match.replace(/\x00ULI\x00/g, '<li>').replace(/\x00\/ULI\x00/g, '</li>');
+      return '<ul>' + items + '</ul>';
+    });
+    // Line breaks
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br />');
+    html = '<p>' + html + '</p>';
+    // Clean empty p
+    html = html.replace(/<p><\/p>/g, '');
+    return html;
+  }
+
+  function escHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  input.addEventListener('input', () => {
+    output.innerHTML = renderMd(input.value);
+  });
+
+  document.getElementById('mdSample').addEventListener('click', () => {
+    input.value = `# Markdown 示例
+
+## 基本格式
+
+这是**粗体**，这是*斜体*，这是~~删除线~~。
+
+## 代码
+
+行内代码: \`console.log("hello")\`
+
+代码块:
+\`\`\`javascript
+function hello() {
+  console.log("Hello, world!");
+}
+\`\`\`
+
+## 引用
+
+> 这是一段引用文本。
+
+## 列表
+
+- 项目一
+- 项目二
+- 项目三
+
+1. 第一项
+2. 第二项
+3. 第三项
+
+## 链接与图片
+
+[访问 GitHub](https://github.com)
+
+---
+
+**感谢使用!** 🎉`;
+    output.innerHTML = renderMd(input.value);
+  });
+
+  document.getElementById('mdCopy').addEventListener('click', () => {
+    const html = output.innerHTML;
+    if (!html.trim()) return;
+    copyWithFeedback(input.value || html.replace(/<[^>]+>/g, ''), document.getElementById('mdCopy'), 'Markdown ');
+  });
+})();
+
+// =============================================
+// ========== 时间戳转换 =========================
+// =============================================
+(function() {
+  const tsInput = document.getElementById('tsInput');
+  const msg = document.getElementById('tsMsg');
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  function showTsResult(ts) {
+    let ms = ts;
+    if (ms < 1e12) ms = ms * 1000;
+    const d = new Date(ms);
+    if (isNaN(d.getTime())) { setMsg('无效的时间戳。', 'error'); return; }
+    document.getElementById('tsLocal').textContent = d.toLocaleString('zh-CN');
+    document.getElementById('tsUtc').textContent = d.toUTCString();
+    document.getElementById('tsIso').textContent = d.toISOString();
+    document.getElementById('tsDay').textContent = ['日','一','二','三','四','五','六'][d.getDay()];
+    setMsg('转换成功！', 'success');
+  }
+
+  document.getElementById('tsNow').addEventListener('click', () => {
+    tsInput.value = Math.floor(Date.now() / 1000);
+    showTsResult(parseInt(tsInput.value));
+  });
+
+  document.getElementById('tsConvert').addEventListener('click', () => {
+    const val = parseFloat(tsInput.value.trim());
+    if (isNaN(val)) return setMsg('请输入有效的时间戳。', 'error');
+    showTsResult(val);
+  });
+
+  document.getElementById('dtNow').addEventListener('click', () => {
+    const now = new Date();
+    document.getElementById('dtInput').value = now.toISOString().slice(0, 16);
+  });
+
+  document.getElementById('dtConvert').addEventListener('click', () => {
+    const val = document.getElementById('dtInput').value;
+    if (!val) return setMsg('请选择日期时间。', 'error');
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return setMsg('无效的日期时间。', 'error');
+    const sec = Math.floor(d.getTime() / 1000);
+    document.getElementById('dtSec').textContent = sec;
+    document.getElementById('dtMs').textContent = d.getTime();
+  });
+
+  document.getElementById('dtCopySec').addEventListener('click', () => {
+    const v = document.getElementById('dtSec').textContent;
+    if (v !== '-') { copyWithFeedback(v, document.getElementById('dtCopySec'), '秒级时间戳 '); }
+  });
+  document.getElementById('dtCopyMs').addEventListener('click', () => {
+    const v = document.getElementById('dtMs').textContent;
+    if (v !== '-') { copyWithFeedback(v, document.getElementById('dtCopyMs'), '毫秒级时间戳 '); }
+  });
+})();
+
+// =============================================
+// ========== UUID 生成 =========================
+// =============================================
+(function() {
+  const output = document.getElementById('uuidOutput');
+  const msg = document.getElementById('uuidMsg');
+
+  function genUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  function generate(count) {
+    const uuids = Array.from({ length: count }, genUUID);
+    output.value = uuids.join('\n');
+    msg.textContent = `已生成 ${count} 个 UUID。`;
+    msg.className = 'notice success';
+  }
+
+  document.getElementById('uuidGen1').addEventListener('click', () => generate(1));
+  document.getElementById('uuidGen5').addEventListener('click', () => generate(5));
+  document.getElementById('uuidGen10').addEventListener('click', () => generate(10));
+  document.getElementById('uuidClear').addEventListener('click', () => { output.value = ''; msg.textContent = ''; });
+
+  document.getElementById('uuidCopy').addEventListener('click', () => {
+    const text = output.value.trim();
+    if (!text) return;
+    copyWithFeedback(text, document.getElementById('uuidCopy'), 'UUID ');
+  });
+})();
+
+// =============================================
+// ========== 颜色转换 ===========================
+// =============================================
+(function() {
+  const swatch = document.getElementById('colorSwatch');
+  const picker = document.getElementById('colorPicker');
+  const input = document.getElementById('colorInput');
+  const hexEl = document.getElementById('colorHex');
+  const rgbEl = document.getElementById('colorRgb');
+  const hslEl = document.getElementById('colorHsl');
+
+  function updateColor(hex) {
+    const rgb = hexToRgb(hex);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    swatch.style.background = hex;
+    hexEl.textContent = hex;
+    rgbEl.textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    hslEl.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+    input.value = hex;
+    picker.value = hex;
+  }
+
+  function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    return { r: parseInt(hex.slice(0,2), 16), g: parseInt(hex.slice(2,4), 16), b: parseInt(hex.slice(4,6), 16) };
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
       }
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
 
-      function updateSvgPreview(svgText) {
-        const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        svgPreview.src = url;
-        svgPreview.style.display = 'block';
-        pngPreview.style.display = 'none';
-        tabSvg.classList.add('active');
-        tabPng.classList.remove('active');
-        if (lastPngUrl) {
-          URL.revokeObjectURL(lastPngUrl);
-          lastPngUrl = '';
-        }
-        svgPreview.onload = () => URL.revokeObjectURL(url);
+  function parseColorString(str) {
+    str = str.trim();
+    // hex
+    const hexMatch = str.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+    if (hexMatch) {
+      let h = hexMatch[1];
+      if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      return '#' + h.toLowerCase();
+    }
+    // rgb
+    const rgbMatch = str.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    if (rgbMatch) {
+      const r = Math.min(255, Math.max(0, parseInt(rgbMatch[1])));
+      const g = Math.min(255, Math.max(0, parseInt(rgbMatch[2])));
+      const b = Math.min(255, Math.max(0, parseInt(rgbMatch[3])));
+      return '#' + [r,g,b].map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+    // hsl
+    const hslMatch = str.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
+    if (hslMatch) {
+      let h = parseInt(hslMatch[1]) / 360;
+      let s = parseInt(hslMatch[2]) / 100;
+      let l = parseInt(hslMatch[3]) / 100;
+      let r, g, b;
+      if (s === 0) { r = g = b = l; }
+      else {
+        const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q-p)*6*t; if (t < 1/2) return q; if (t < 2/3) return p + (q-p)*(2/3-t)*6; return p; };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
       }
+      return '#' + [r,g,b].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
+    }
+    return null;
+  }
 
-      function showTab(type) {
-        if (type === 'svg') {
-          svgPreview.style.display = 'block';
-          pngPreview.style.display = 'none';
-          tabSvg.classList.add('active');
-          tabPng.classList.remove('active');
-        } else {
-          svgPreview.style.display = 'none';
-          pngPreview.style.display = 'block';
-          tabPng.classList.add('active');
-          tabSvg.classList.remove('active');
-        }
-      }
+  picker.addEventListener('input', () => updateColor(picker.value));
 
-      async function convertSvgToPng(svgText) {
-        const { width, height } = inferSize(svgText);
-        const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-        const svgUrl = URL.createObjectURL(svgBlob);
-        const img = new Image();
+  document.getElementById('colorParse').addEventListener('click', () => {
+    const hex = parseColorString(input.value);
+    if (hex) updateColor(hex);
+  });
 
-        try {
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = () => reject(new Error('SVG 解析失败，请检查内容是否完整。'));
-            img.src = svgUrl;
-          });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { const hex = parseColorString(input.value); if (hex) updateColor(hex); } });
 
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+  ['Hex','Rgb','Hsl'].forEach(type => {
+    document.getElementById('colorCopy' + type).addEventListener('click', () => {
+      const text = document.getElementById('color' + type).textContent;
+      copyWithFeedback(text, document.getElementById('colorCopy' + type), type + ' ');
+    });
+  });
 
-          const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-          if (!blob) throw new Error('PNG 生成失败。');
+  document.getElementById('colorCopyAll').addEventListener('click', () => {
+    const hex = document.getElementById('colorHex').textContent;
+    const rgb = document.getElementById('colorRgb').textContent;
+    const hsl = document.getElementById('colorHsl').textContent;
+    copyWithFeedback(`${hex}\n${rgb}\n${hsl}`, document.getElementById('colorCopyAll'), '颜色 ');
+  });
 
-          if (lastPngUrl) URL.revokeObjectURL(lastPngUrl);
-          lastPngUrl = URL.createObjectURL(blob);
-          pngPreview.src = lastPngUrl;
-          showTab('png');
-          downloadBtn.disabled = false;
-          downloadBtn.dataset.url = lastPngUrl;
-          sizeInfo.textContent = `${width} × ${height}`;
-          statusInfo.textContent = '已生成';
-          setMessage('PNG 已生成，可以直接下载。', 'success');
-          return blob;
-        } finally {
-          URL.revokeObjectURL(svgUrl);
-        }
-      }
+  // Color palette
+  const palette = ['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#10b981','#14b8a6','#06b6d4','#0ea5e9','#3b82f6','#6366f1','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#64748b','#78716c','#000000','#ffffff'];
+  const paletteEl = document.getElementById('colorPalette');
+  palette.forEach(c => {
+    const div = document.createElement('div');
+    div.style.cssText = `width:100%;aspect-ratio:1;background:${c};border-radius:8px;cursor:pointer;border:2px solid ${c === '#ffffff' ? '#ddd' : 'transparent'};`;
+    div.title = c;
+    div.addEventListener('click', () => updateColor(c));
+    paletteEl.appendChild(div);
+  });
 
-      async function syncInput() {
-        const svgText = svgInput.value.trim();
-        if (!svgText) {
-          svgPreview.removeAttribute('src');
-          pngPreview.removeAttribute('src');
-          pngPreview.style.display = 'none';
-          svgPreview.style.display = 'block';
-          downloadBtn.disabled = true;
-          tabPng.disabled = true;
-          statusInfo.textContent = '等待输入';
-          sizeInfo.textContent = '-';
-          nameInfo.textContent = 'svg.png';
-          setMessage('输入 SVG 后点击“生成 PNG”。');
-          return;
-        }
+  updateColor('#2563eb');
+})();
 
-        try {
-          const { width, height } = inferSize(svgText);
-          sizeInfo.textContent = `${width} × ${height}`;
-          const name = (svgInput.dataset.filename || 'svg').replace(/\.svg$/i, '');
-          nameInfo.textContent = `${escapeFilename(name)}.png`;
-          statusInfo.textContent = '可预览';
-          updateSvgPreview(svgText);
-          setMessage('SVG 已加载，点击“生成 PNG”即可。');
-        } catch (err) {
-          setMessage(err.message, 'error');
-          statusInfo.textContent = '错误';
-        }
-      }
+// ========== Base64 图片互转 ====================
+(function() {
+  // --- Base64 → Image ---
+  const input = document.getElementById('b64iInput');
+  const box = document.getElementById('b64iBox');
+  const msg = document.getElementById('b64iMsg');
+  const fmtEl = document.getElementById('b64iFormat');
+  const dimEl = document.getElementById('b64iDim');
+  const sizeEl = document.getElementById('b64iSize');
+  const downloadBtn = document.getElementById('b64iDownload');
+  let dataUrl = null;
 
-      fileInput.addEventListener('change', async () => {
-        const file = fileInput.files?.[0];
-        if (!file) return;
-        const text = await file.text();
-        svgInput.value = text;
-        svgInput.dataset.filename = file.name;
-        inputHint.textContent = `已载入文件：${file.name}`;
-        await syncInput();
-      });
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
 
-      svgInput.addEventListener('input', syncInput);
+  function normalizeBase64(raw) {
+    let s = raw.trim();
+    const m = s.match(/^data:(image\/[^;]+);base64,(.+)$/i);
+    if (m) return { mime: m[1], b64: m[2], full: s };
+    try {
+      const bytes = Uint8Array.from(atob(s), c => c.charCodeAt(0));
+      let mime = 'image/png';
+      if (bytes[0] === 0xFF && bytes[1] === 0xD8) mime = 'image/jpeg';
+      else if (bytes[0] === 0x89 && bytes[1] === 0x50) mime = 'image/png';
+      else if (bytes[0] === 0x47 && bytes[1] === 0x49) mime = 'image/gif';
+      else if (bytes[0] === 0x52 && bytes[1] === 0x49) mime = 'image/webp';
+      else if (bytes[0] === 0x42 && bytes[1] === 0x4D) mime = 'image/bmp';
+      return { mime, b64: s, full: `data:${mime};base64,${s}` };
+    } catch { return null; }
+  }
 
-      convertBtn.addEventListener('click', async () => {
-        const svgText = svgInput.value.trim();
-        if (!svgText) {
-          setMessage('请先输入 SVG。', 'error');
-          return;
-        }
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+    return (b / (1024 * 1024)).toFixed(2) + ' MB';
+  }
 
-        convertBtn.disabled = true;
-        downloadBtn.disabled = true;
-        statusInfo.textContent = '转换中';
-        setMessage('正在生成 PNG...');
-
-        try {
-          await convertSvgToPng(svgText);
-          tabPng.disabled = false;
-        } catch (err) {
-          statusInfo.textContent = '失败';
-          setMessage(err.message || '转换失败。', 'error');
-        } finally {
-          convertBtn.disabled = false;
-        }
-      });
-
-      downloadBtn.addEventListener('click', () => {
-        const url = downloadBtn.dataset.url;
-        if (!url) return;
+  document.getElementById('b64iPreview').addEventListener('click', () => {
+    const raw = input.value.trim();
+    if (!raw) return setMsg('请输入 Base64 字符串。', 'error');
+    const parsed = normalizeBase64(raw);
+    if (!parsed) return setMsg('无效的 Base64 字符串。', 'error');
+    dataUrl = parsed.full;
+    const img = new Image();
+    img.onload = () => {
+      dimEl.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+      fmtEl.textContent = parsed.mime;
+      try { sizeEl.textContent = formatBytes(Math.ceil(parsed.b64.length * 0.75)); }
+      catch { sizeEl.textContent = '-'; }
+      box.innerHTML = `<img src="${dataUrl}" style="max-width:100%;display:block;" />`;
+      downloadBtn.disabled = false;
+      downloadBtn.onclick = () => {
         const a = document.createElement('a');
-        a.href = url;
-        a.download = nameInfo.textContent || 'svg.png';
+        a.href = dataUrl;
+        a.download = 'image.' + (parsed.mime.split('/')[1] || 'png').replace('jpeg', 'jpg');
         a.click();
-      });
+      };
+      setMsg('图片已加载。', 'success');
+    };
+    img.onerror = () => setMsg('无法解析该图片数据。', 'error');
+    img.src = dataUrl;
+  });
 
-      copySvgBtn.addEventListener('click', async () => {
-        const text = svgInput.value.trim();
-        if (!text) {
-          setMessage('没有可复制的 SVG。', 'error');
-          return;
+  document.getElementById('b64iClear').addEventListener('click', () => {
+    input.value = ''; dataUrl = null;
+    box.innerHTML = '<p class="notice">输入 Base64 后点击预览。</p>';
+    fmtEl.textContent = '-'; dimEl.textContent = '-'; sizeEl.textContent = '-';
+    downloadBtn.disabled = true; setMsg('');
+  });
+
+  document.getElementById('b64iCopyData').addEventListener('click', () => {
+    if (!dataUrl) return setMsg('请先生成预览。', 'error');
+    copyWithFeedback(dataUrl, document.getElementById('b64iCopyData'), 'Data URL ');
+  });
+
+  // --- Image → Base64 ---
+  const img2b64File = document.getElementById('img2b64File');
+  const img2b64Box = document.getElementById('img2b64Box');
+  const img2b64Hint = document.getElementById('img2b64Hint');
+  const img2b64DataUrl = document.getElementById('img2b64DataUrl');
+  let img2b64Result = { dataUrl: '', rawB64: '' };
+
+  function setImg2b64Msg(text, type) {
+    img2b64Hint.textContent = text;
+    img2b64Hint.className = 'notice' + (type ? ' ' + type : '');
+  }
+
+  img2b64File.addEventListener('change', () => {
+    const file = img2b64File.files?.[0];
+    if (!file) return;
+
+    setImg2b64Msg('正在处理...');
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      img2b64Result.dataUrl = result;
+      img2b64DataUrl.value = result;
+      // Extract raw base64
+      const commaIdx = result.indexOf(',');
+      const raw = commaIdx >= 0 ? result.slice(commaIdx + 1) : result;
+      img2b64Result.rawB64 = raw;
+
+      // Show preview
+      img2b64Box.innerHTML = `<img src="${result}" style="max-width:100%;display:block;" />`;
+      setImg2b64Msg(`已加载：${file.name}（${formatBytes(file.size)}）`, 'success');
+    };
+    reader.onerror = () => setImg2b64Msg('读取文件失败。', 'error');
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('img2b64CopyData').addEventListener('click', () => {
+    if (!img2b64Result.dataUrl) return setImg2b64Msg('请先选择图片。', 'error');
+    copyWithFeedback(img2b64Result.dataUrl, document.getElementById('img2b64CopyData'), 'Data URL ');
+  });
+
+  document.getElementById('img2b64CopyRaw').addEventListener('click', () => {
+    if (!img2b64Result.rawB64) return setImg2b64Msg('请先选择图片。', 'error');
+    copyWithFeedback(img2b64Result.rawB64, document.getElementById('img2b64CopyRaw'), '纯 Base64 ');
+  });
+
+  document.getElementById('img2b64CopyAll')?.addEventListener('click', () => {
+    if (!img2b64Result.dataUrl) return setImg2b64Msg('请先选择图片。', 'error');
+    const text = `Data URL:\n${img2b64Result.dataUrl}\n\nRaw Base64:\n${img2b64Result.rawB64}`;
+    copyWithFeedback(text, document.getElementById('img2b64CopyAll'), '全部 ');
+  });
+})();
+
+// ========== HTTP 头转 JSON =====================
+(function() {
+  const input = document.getElementById('httpInput');
+  const output = document.getElementById('httpOutput');
+  const msg = document.getElementById('httpMsg');
+
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  function parseHeaders(text) {
+    const lines = text.split(/\r?\n/);
+    const result = { _meta: {} };
+    let firstLine = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      if (!line) continue;
+
+      // First line: request line or status line
+      if (i === 0 || (firstLine === null && line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|HTTP\/)/i))) {
+        if (firstLine === null) {
+          firstLine = line;
+          const reqMatch = line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE)\s+(\S+)(?:\s+HTTP\/(\S+))?/i);
+          if (reqMatch) {
+            result._meta.method = reqMatch[1].toUpperCase();
+            result._meta.url = reqMatch[2];
+            result._meta.protocol = reqMatch[3] ? 'HTTP/' + reqMatch[3] : '';
+          } else {
+            const respMatch = line.match(/^HTTP\/(\S+)\s+(\d{3})(?:\s+(.+))?/);
+            if (respMatch) {
+              result._meta.protocol = 'HTTP/' + respMatch[1];
+              result._meta.status = parseInt(respMatch[2]);
+              result._meta.statusText = (respMatch[3] || '').trim();
+            } else {
+              result._meta.raw = line;
+            }
+          }
+          continue;
         }
-        await navigator.clipboard.writeText(text);
-        setMessage('SVG 已复制到剪贴板。', 'success');
-      });
+      }
 
-      clearBtn.addEventListener('click', () => {
-        svgInput.value = '';
-        svgInput.dataset.filename = '';
-        fileInput.value = '';
-        inputHint.textContent = '支持直接粘贴完整 SVG 文本。';
-        syncInput();
-      });
+      // Header line: Key: Value
+      const colonIdx = line.indexOf(':');
+      if (colonIdx > 0) {
+        const key = line.substring(0, colonIdx).trim();
+        let val = line.substring(colonIdx + 1).trim();
+        // Try to parse JSON values
+        if (val.startsWith('{') || val.startsWith('[')) {
+          try { val = JSON.parse(val); } catch {}
+        } else if (val === 'true') val = true;
+        else if (val === 'false') val = false;
+        else if (/^\d+$/.test(val)) val = parseInt(val);
+        else if (/^\d+\.\d+$/.test(val)) val = parseFloat(val);
 
-      loadSampleBtn.addEventListener('click', () => {
-        svgInput.dataset.filename = 'sample.svg';
-        svgInput.value = sampleSvg;
-        inputHint.textContent = '已加载示例 SVG。';
-        syncInput();
-      });
+        // Merge duplicate headers into array
+        if (Object.prototype.hasOwnProperty.call(result, key)) {
+          if (Array.isArray(result[key])) result[key].push(val);
+          else result[key] = [result[key], val];
+        } else {
+          result[key] = val;
+        }
+      }
+    }
 
-      tabSvg.addEventListener('click', () => showTab('svg'));
-      tabPng.addEventListener('click', () => {
-        if (!lastPngUrl) return;
-        showTab('png');
-      });
+    // Clean up _meta if empty
+    if (Object.keys(result._meta).length === 0) delete result._meta;
+    return result;
+  }
 
-      syncInput();
-    </script>
-  </body>
+  document.getElementById('httpToJson')?.addEventListener('click', () => {
+    const text = input.value.trim();
+    if (!text) return setMsg('请粘贴 HTTP Headers。', 'error');
+    try {
+      const parsed = parseHeaders(text);
+      output.value = JSON.stringify(parsed, null, 2);
+      setMsg('转换成功！', 'success');
+    } catch (e) { setMsg('解析失败: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('httpToJs')?.addEventListener('click', () => {
+    const text = input.value.trim();
+    if (!text) return setMsg('请粘贴 HTTP Headers。', 'error');
+    try {
+      const parsed = parseHeaders(text);
+      const js = 'const headers = ' + JSON.stringify(parsed, null, 2)
+        .replace(/"([^"]+)":/g, (_, k) => /^[a-zA-Z_$][\w$]*$/.test(k) ? `${k}:` : `"${k}":`);
+      output.value = js + ';';
+      setMsg('转换成功！', 'success');
+    } catch (e) { setMsg('解析失败: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('httpToCurl')?.addEventListener('click', () => {
+    const text = input.value.trim();
+    if (!text) return setMsg('请粘贴 HTTP Headers。', 'error');
+    try {
+      const parsed = parseHeaders(text);
+      if (!parsed._meta?.method) return setMsg('未找到 HTTP 请求行（GET/POST 等）。', 'error');
+      const method = parsed._meta.method;
+      const url = parsed._meta.url || 'https://example.com';
+      let curl = `curl -X ${method} '${url}'`;
+      for (const [k, v] of Object.entries(parsed)) {
+        if (k === '_meta') continue;
+        if (Array.isArray(v)) {
+          v.forEach(val => { curl += ` \\\n  -H '${k}: ${val}'`; });
+        } else {
+          curl += ` \\\n  -H '${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}'`;
+        }
+      }
+      output.value = curl;
+      setMsg('cURL 命令已生成！', 'success');
+    } catch (e) { setMsg('生成失败: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('httpClear')?.addEventListener('click', () => {
+    input.value = ''; output.value = ''; setMsg('');
+  });
+
+  document.getElementById('httpCopy')?.addEventListener('click', () => {
+    const text = output.value.trim();
+    if (!text) return setMsg('没有可复制的内容。', 'error');
+    copyWithFeedback(text, document.getElementById('httpCopy'), 'HTTP 头 ');
+  });
+
+  document.getElementById('httpSample')?.addEventListener('click', () => {
+    input.value = `GET /api/v1/users?page=1&limit=10 HTTP/1.1
+Host: api.example.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Accept: application/json
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0
+Content-Type: application/json
+Cache-Control: no-cache
+X-Request-Id: 550e8400-e29b-41d4-a716-446655440000`;
+    output.value = '';
+    setMsg('已加载示例 HTTP 请求头。');
+  });
+})();
+
+// ============ Utility: Toast Notification ============
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  // Auto-remove after 2s (animation is 1.5s visible + 0.3s out)
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2000);
+}
+
+// ============ Utility: robust clipboard copy ============
+async function copyText(text) {
+  if (typeof text !== 'string' || !text) throw new Error('空文本');
+  // Try modern Clipboard API first
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {}
+  // Fallback: execCommand
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    const ok = document.execCommand('copy');
+    if (!ok) throw new Error('execCommand 返回 false');
+  } finally {
+    document.body.removeChild(ta);
+  }
+}
+
+// ============ Utility: copy with full feedback ============
+// Copies text, shows toast, and animates the button briefly
+async function copyWithFeedback(text, btnEl, label) {
+  if (!text) {
+    showToast(label ? `没有可复制的${label}。` : '没有可复制的内容。', 'error');
+    return;
+  }
+  try {
+    await copyText(text);
+    // Toast
+    showToast(label ? `${label}已复制到剪贴板 ✓` : '已复制到剪贴板 ✓');
+    // Button animation
+    if (btnEl) {
+      // Cancel any pending restoration from a previous click
+      if (btnEl._restoreTimer) { clearTimeout(btnEl._restoreTimer); btnEl._restoreTimer = null; }
+      const originalHTML = btnEl._originalHTML || btnEl.innerHTML;
+      const wasDisabled = btnEl._originalDisabled ?? btnEl.disabled;
+      btnEl._originalHTML = originalHTML;
+      btnEl._originalDisabled = wasDisabled;
+      btnEl.classList.add('btn-copied');
+      btnEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已复制';
+      btnEl.disabled = true;
+      btnEl._restoreTimer = setTimeout(() => {
+        btnEl.classList.remove('btn-copied');
+        btnEl.innerHTML = originalHTML;
+        btnEl.disabled = wasDisabled;
+        btnEl._restoreTimer = null;
+        btnEl._originalHTML = null;
+        btnEl._originalDisabled = null;
+      }, 1500);
+    }
+  } catch (e) {
+    showToast('复制失败: ' + e.message, 'error');
+  }
+}
+
+// Legacy wrapper — still works with element ID + setMsgFn style
+function copyToClipboard(elementId, setMsgFn) {
+  const el = document.getElementById(elementId);
+  const text = (el?.value || el?.textContent || '').trim();
+  if (!text) { setMsgFn('没有可复制的内容。', 'error'); return; }
+  copyText(text).then(
+    () => setMsgFn('已复制到剪贴板。', 'success'),
+    (e) => setMsgFn('复制失败: ' + e.message, 'error')
+  );
+}
+
+// ========== 网站图标获取 =======================
+(function() {
+  const urlInput = document.getElementById('favUrl');
+  const fetchBtn = document.getElementById('favFetch');
+  const previewBox = document.getElementById('favPreviewBox');
+  const placeholder = document.getElementById('favPlaceholder');
+  const metaRow = document.getElementById('favMeta');
+  const typeEl = document.getElementById('favType');
+  const sourceEl = document.getElementById('favSource');
+  const svgActions = document.getElementById('favSvgActions');
+  const downloadBtn = document.getElementById('favDownload');
+  const copyLinkBtn = document.getElementById('favCopyLink');
+  const msg = document.getElementById('favMsg');
+
+  function setMsg(text, type) { msg.textContent = text; msg.className = 'notice' + (type ? ' ' + type : ''); }
+
+  let currentFavicon = {
+    domain: '',
+    apiUrl: '',
+    dataUrl: '',       // blob data URL for download
+    dataBlob: null,    // raw blob from API (any format)
+    isSvg: false,
+    svgText: '',       // raw SVG text
+  };
+
+  function extractDomain(input) {
+    let s = input.trim();
+    if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+    try {
+      const u = new URL(s);
+      return { domain: u.hostname, baseUrl: u.origin };
+    } catch { return null; }
+  }
+
+  function resetState() {
+    previewBox.innerHTML = '';
+    previewBox.appendChild(placeholder);
+    placeholder.textContent = '输入网址后点击"获取图标"。';
+    placeholder.style.display = '';
+    metaRow.style.display = 'none';
+    svgActions.style.display = 'none';
+    downloadBtn.disabled = true;
+    setMsg('');
+    currentFavicon = { domain: '', apiUrl: '', dataUrl: '', dataBlob: null, isSvg: false, svgText: '' };
+  }
+
+  function showError(text) {
+    placeholder.textContent = text;
+    placeholder.style.display = '';
+    setMsg(text, 'error');
+  }
+
+  // ========== Fetch via public favicon API ==========
+  async function fetchFaviconApi(domain) {
+    const url = `https://api.afmax.cn/so/ico/index.php?r=${domain}`;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const blob = await resp.blob();
+      const dataUrl = URL.createObjectURL(blob);
+      const mime = blob.type || 'image/png';
+      return { url, dataUrl, blob, mime };
+    } catch { return null; }
+  }
+
+  // ========== Fetch SVG via server proxy (bonus) ==========
+  async function fetchSvgFromProxy(baseUrl) {
+    const svgUrl = `${baseUrl}/favicon.svg`;
+    try {
+      const resp = await fetch(`/proxy/favicon?url=${encodeURIComponent(svgUrl)}`);
+      if (!resp.ok) return null;
+      const contentType = resp.headers.get('content-type') || '';
+      if (!contentType.includes('svg')) return null;
+      const text = await resp.text();
+      return text.trim().startsWith('<') ? text : null;
+    } catch { return null; }
+  }
+
+  // ========== SVG → PNG via canvas ==========
+  async function svgToPngBlob(svgText, size = 256) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas toBlob failed'));
+        }, 'image/png');
+      };
+      img.onerror = () => reject(new Error('SVG image load failed'));
+      img.src = 'data:image/svg+xml,' + encodeURIComponent(svgText);
+    });
+  }
+
+  // ========== Main fetch handler ==========
+  async function fetchFavicon() {
+    const parsed = extractDomain(urlInput.value);
+    if (!parsed) { showError('请输入有效的网站 URL。'); return; }
+    const { domain, baseUrl } = parsed;
+
+    setMsg('正在获取图标...');
+    resetState();
+    currentFavicon.domain = domain;
+
+    // 1. Use the afmax.cn favicon API (supports CORS)
+    const apiResult = await fetchFaviconApi(domain);
+    if (!apiResult) { showError('无法获取图标，请检查网址是否正确。'); return; }
+
+    currentFavicon.apiUrl = apiResult.url;
+    currentFavicon.dataUrl = apiResult.dataUrl;
+    currentFavicon.dataBlob = apiResult.blob;
+    // Show icon
+    placeholder.style.display = 'none';
+    previewBox.innerHTML = `<img src="${apiResult.dataUrl}" style="max-width:128px;display:block;" alt="Favicon" />`;
+    metaRow.style.display = '';
+    typeEl.textContent = apiResult.mime.replace('image/', '').toUpperCase();
+    sourceEl.textContent = domain;
+    downloadBtn.disabled = false;
+    setMsg('图标获取成功！', 'success');
+
+    // 2. Try to detect SVG favicon from the actual site
+    const svgText = await fetchSvgFromProxy(baseUrl);
+    if (svgText) {
+      currentFavicon.isSvg = true;
+      currentFavicon.svgText = svgText;
+      typeEl.textContent = 'SVG';
+      svgActions.style.display = '';
+      setMsg('检测到 SVG 图标，可选择保存格式。', 'success');
+    }
+  }
+
+  fetchBtn.addEventListener('click', fetchFavicon);
+
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') fetchFavicon();
+  });
+
+  // Quick buttons
+  document.querySelectorAll('.fav-quick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      urlInput.value = btn.dataset.url;
+      fetchFavicon();
+    });
+  });
+
+  // Download icon
+  downloadBtn.addEventListener('click', () => {
+    if (!currentFavicon.dataUrl) return;
+    const ext = currentFavicon.isSvg ? 'svg' : 'png';
+    const filename = `${currentFavicon.domain || 'favicon'}.${ext}`;
+    const a = document.createElement('a');
+    a.href = currentFavicon.dataUrl;
+    a.download = filename;
+    a.click();
+  });
+
+  // Copy API link
+  copyLinkBtn.addEventListener('click', () => {
+    const link = currentFavicon.apiUrl || `https://api.afmax.cn/so/ico/index.php?r=${currentFavicon.domain}`;
+    copyWithFeedback(link, copyLinkBtn, '图标链接 ');
+  });
+  // Save SVG
+  document.getElementById('favSaveSvg').addEventListener('click', () => {
+    if (!currentFavicon.svgText) return;
+    const blob = new Blob([currentFavicon.svgText], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentFavicon.domain || 'icon'}.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setMsg('SVG 图标已下载。', 'success');
+  });
+
+  // Convert SVG to PNG and download
+  document.getElementById('favSavePng').addEventListener('click', async () => {
+    if (!currentFavicon.svgText) return;
+    const btn = document.getElementById('favSavePng');
+    const origHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = '转换中...';
+    try {
+      const blob = await svgToPngBlob(currentFavicon.svgText, 256);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentFavicon.domain || 'icon'}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsg('PNG 图标已下载。', 'success');
+    } catch (e) {
+      setMsg('转换失败: ' + e.message, 'error');
+    } finally {
+      btn.innerHTML = origHTML;
+      btn.disabled = false;
+    }
+  });
+
+})();
+</script>
+
+<!-- ======== 公众号浮窗 ======== -->
+<button class="wx-float-btn" id="wxFloatBtn" title="关注公众号">💬</button>
+
+<div class="wx-overlay" id="wxOverlay" style="display:none;">
+  <div class="wx-popup">
+    <button class="wx-close" id="wxClose">&times;</button>
+    <img src="https://od.lk/s/OTZfMTA4MDQ5MzkxXw/logo_scan.jpg" alt="扫码关注公众号" />
+    <h3>欢迎关注 friday工具箱</h3>
+    <p>每天一个小技巧，方便生活每一天</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const btn = document.getElementById('wxFloatBtn');
+  const overlay = document.getElementById('wxOverlay');
+  const close = document.getElementById('wxClose');
+
+  btn.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+    overlay.classList.remove('closing');
+  });
+
+  function hidePopup() {
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.style.display = 'none'; }, 200);
+  }
+
+  close.addEventListener('click', hidePopup);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) hidePopup();
+  });
+})();
+</script>
+</body>
 </html>

@@ -1,4 +1,5 @@
 import http from 'node:http';
+import https from 'node:https';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,9 +18,47 @@ const mimeTypes = {
   '.ico': 'image/x-icon',
 };
 
+// ---- Favicon proxy: fetches remote icons server-side to bypass CORS ----
+function proxyFavicon(targetUrl, res) {
+  const transport = targetUrl.startsWith('https') ? https : http;
+  const req = transport.get(targetUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } }, (proxyRes) => {
+    // Follow redirects (up to 3 hops)
+    if ([301, 302, 307, 308].includes(proxyRes.statusCode) && proxyRes.headers.location) {
+      const redirectUrl = new URL(proxyRes.headers.location, targetUrl).toString();
+      proxyFavicon(redirectUrl, res);
+      return;
+    }
+    const contentType = proxyRes.headers['content-type'] || '';
+    res.writeHead(proxyRes.statusCode, {
+      'Content-Type': contentType,
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=3600',
+    });
+    proxyRes.pipe(res);
+  });
+  req.on('timeout', () => { req.destroy(); res.writeHead(504); res.end('Gateway Timeout'); });
+  req.on('error', (err) => {
+    res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(`Proxy error: ${err.message}`);
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
+
+    // Favicon proxy route
+    if (url.pathname === '/proxy/favicon' && url.searchParams.has('url')) {
+      const target = url.searchParams.get('url');
+      if (!/^https?:\/\/.+/.test(target)) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Invalid URL');
+        return;
+      }
+      proxyFavicon(target, res);
+      return;
+    }
+
     let filePath = path.join(root, decodeURIComponent(url.pathname));
     const fileStat = await stat(filePath).catch(() => null);
 
